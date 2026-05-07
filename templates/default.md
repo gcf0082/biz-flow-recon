@@ -12,46 +12,28 @@
 
 ## 业务流
 
-### 子功能 1：用户登录与会话
+### 子功能 1：文件管理
 
-#### POST /api/login
+#### GET /api/files/{name}
 
-未登录用户的登录入口（com.acme.auth.AuthController#login，AuthController.java:42）。多服务跨调用：
+已登录用户下载导出文件（com.acme.file.FileController#download，FileController.java:29）。入参直接拼到后台路径，简单流程：
 
 ```mermaid
 sequenceDiagram
     autonumber
     participant U as 用户
-    participant A as AuthController
-    participant DB as 用户库
-    participant IDP as IdpController
-    participant R as Redis
-    participant K as KMS
+    participant C as FileController
+    participant FS as 本地磁盘
 
-    U->>A: POST /api/login (username, password)
-    A->>DB: 查密码哈希, BCrypt.checkpw
-    A->>IDP: POST /token (subject)
-    IDP->>R: 拉用户角色集
-    IDP->>K: 取 RS256 私钥(本地缓存,每小时刷)
-    IDP-->>A: JWT
-    A->>R: 写会话
-    A-->>U: 200 token
+    U->>C: GET /api/files/{name}
+    C->>FS: Paths.get("/data/exports/" + name)
+    FS-->>C: InputStream
+    C-->>U: Files.copy(in, response)
 ```
 
-- **请求**：body JSON `{username: string!, password: string!}`（DTO: com.acme.auth.LoginRequest，LoginRequest.java:11，字段都 @NotBlank）
-- **第三方**（IDP 换 JWT）：
-
-  ```
-  POST http://internal-idp/token
-  - Content-Type: application/x-www-form-urlencoded
-  - Authorization: Basic <base64(client_id:secret)>
-  - body: grant_type=password&username={body.username}&password={body.password}
-  - 客户端: RestTemplate（com.acme.auth.OAuthClient，OAuthClient.java:31）
-  ```
-
-  对端 com.acme.idp.IdpController#issue（services/idp-svc/.../IdpController.java:25）：Redis 拉角色集 → KmsClient 取 RS256 私钥（IdpKmsClient.java:18，本地缓存每小时刷）→ 签 JWT
-- **加解密**：BCrypt.checkpw 校验密码哈希（避免明文比对）
-- **文件**：读 `config/oauth.yaml`（YAML，启动加载）；追加 `/var/log/acme/auth.log`（Logback，每次登录一行）
+- **请求**：path `name` (string)
+- **输入流向**：`path.name` → `Paths.get("/data/exports/" + name)` → `Files.copy(path, OutputStream)`（FileController.java:34）—— 拼路径
+- **文件**：读 `/data/exports/{path.name}`（按用户传入文件名读取并写到响应流）
 
 #### POST /api/jobs/run-report
 
@@ -91,12 +73,6 @@ DTO: com.acme.order.OrderRequest（OrderRequest.java:18）；Header `Content-Typ
 
 - **数据库**：MyBatis `mapper/OrderMapper.xml` 在 `orders`、`order_items` 表 INSERT
 - **第三方**：调内部库存服务 `POST http://stock-svc/v1/reserve`（Feign，com.acme.order.StockClient，StockClient.java:12，body 是 `[{sku, qty}]` 列表）
-
-#### GET /api/files/{name}
-
-已登录用户下载导出文件（com.acme.file.FileController#download，FileController.java:29）。`**请求**: path `name` (string)`。
-
-- **输入流向**：`path.name` → `Paths.get("/data/exports/" + name)`，再 `Files.copy(...)` 到响应流（FileController.java:34）—— 拼路径
 
 ## 未跟到的引用
 
