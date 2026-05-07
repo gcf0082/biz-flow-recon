@@ -36,9 +36,9 @@ sequenceDiagram
 ```
 
 - **请求**：body JSON `{username: string!, password: string!}`（DTO: com.acme.auth.LoginRequest，LoginRequest.java:11，字段都 @NotBlank）
+- **输入流向**：`body.username` → `log.info("login attempt: {}", username)` → `/var/log/acme/auth.log`（AuthController.java:55）—— 写日志
 - **加解密**：`BCrypt.checkpw` 校验密码哈希——避免明文比对；`IdpController#issue`（services/idp-svc/.../IdpController.java:25）用 RS256 签 JWT，私钥由 `IdpKmsClient`（IdpKmsClient.java:18）启动时从 KMS 拉到本地缓存
 - **配置**：启动读 `config/oauth.yaml`（YAML，OAuth 客户端配置）
-- **日志**：每次登录尝试写一行 Logback 到 `/var/log/acme/auth.log`
 
 #### POST /api/jobs/run-report
 
@@ -83,6 +83,13 @@ DTO: com.acme.order.OrderRequest（OrderRequest.java:18）；Header `Content-Typ
 #### GET /api/orders/{id}
 
 已登录用户查订单详情（com.acme.order.OrderController#get，OrderController.java:74）。`**请求**: path `id` (Long)`。从 `orders`/`order_items` 表读后返回。
+
+#### GET /api/files/{name}
+
+已登录用户下载导出文件（com.acme.file.FileController#download，FileController.java:29）。`**请求**: path `name` (string)`。
+
+- **输入流向**：`path.name` → `Paths.get("/data/exports/" + name)`，再 `Files.copy(...)` 到响应流（FileController.java:34）—— 拼路径
+- **日志**：每次下载写一行 Logback 到 `/var/log/acme/file.log`
 
 ## 未跟到的引用
 
