@@ -24,18 +24,18 @@ sequenceDiagram
     participant U as 用户
     participant A as AuthController
     participant DB as 用户库
-    participant IDP as IdpController (idp-svc)
+    participant IDP as IdpController
     participant R as Redis
     participant K as KMS
 
     U->>A: POST /api/login (username, password)
-    A->>DB: 查密码哈希; BCrypt.checkpw
+    A->>DB: 查密码哈希, BCrypt.checkpw
     A->>IDP: POST /token (subject)
     IDP->>R: 拉用户角色集
     IDP->>K: 取 RS256 私钥(本地缓存,每小时刷)
     IDP-->>A: JWT
     A->>R: 写会话
-    A-->>U: 200 {token}
+    A-->>U: 200 token
 ```
 
 - **请求**：body JSON `{username: string!, password: string!}`（DTO: com.acme.auth.LoginRequest，LoginRequest.java:11，字段都 @NotBlank）
