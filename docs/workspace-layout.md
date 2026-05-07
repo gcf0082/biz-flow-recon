@@ -87,6 +87,42 @@ skill 按下面的命名规则写产物到 `output/`：
 
 默认**覆盖同名文件**——便于 git diff。要留快照请自己改名或用 git。
 
+## 大项目自动拆分
+
+项目大到一次分析装不下时（几十个 Controller、多 maven 模块、6+ 子功能等），skill 会**自动**进入"大项目模式"：
+
+1. 先盘子功能，写 `output/_plan.md` 列出子任务（每个含名称、slug、scope 目录、目标文件名）
+2. 简短告诉你拆分方案
+3. 逐个子任务执行，每个产出一份 `output/features-{slug}.md`
+4. 全部完成后写 `output/overview.md`：核心功能总结 + 子功能索引（链接到各 features 文件）+ 未跟到的引用汇总
+
+最终目录大概是：
+
+```
+biz-flow-recon/output/
+├── _plan.md              拆分方案（可改）
+├── features-auth.md
+├── features-order.md
+├── features-pay.md
+├── ...
+└── overview.md           入口文件（含索引）
+```
+
+### 你能怎么干预
+
+- **改拆分**：在 plan 阶段让 skill 等你确认；或者直接改 `_plan.md` 再让它接着跑
+- **打开并行**：在 `knowledge/conventions.md` 里加：
+
+  ```
+  ## 执行模式
+  并行
+  ```
+
+  这时 skill 用 Task 工具并行派发 subagent 同时分析多个子功能，更快但消耗 token 更多
+
+- **重做某条**：删掉对应的 `features-X.md` 重跑，skill 默认跳过已存在的、只补做缺的
+- **全部重做**：删整个 `output/`，或明确告诉 skill"全部重做"
+
 ## 建议 gitignore
 
 `biz-flow-recon/output/` 通常包含项目内部信息，**建议不要提交到公开仓库**。在被分析项目的 `.gitignore` 加：
