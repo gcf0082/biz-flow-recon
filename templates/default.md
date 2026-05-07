@@ -35,6 +35,7 @@ sequenceDiagram
     A-->>U: 200 {token}
 ```
 
+- **请求**：body JSON `{username: string!, password: string!}`（DTO: com.acme.auth.LoginRequest，LoginRequest.java:11，字段都 @NotBlank）
 - **加解密**：`BCrypt.checkpw` 校验密码哈希——避免明文比对；`IdpController#issue`（services/idp-svc/.../IdpController.java:25）用 RS256 签 JWT，私钥由 `IdpKmsClient`（IdpKmsClient.java:18）启动时从 KMS 拉到本地缓存
 - **配置**：启动读 `config/oauth.yaml`（YAML，OAuth 客户端配置）
 - **日志**：每次登录尝试写一行 Logback 到 `/var/log/acme/auth.log`
@@ -57,7 +58,31 @@ sequenceDiagram
 
 #### POST /api/orders
 
-...（按这条流程的特点挑形式）
+已登录用户提交订单（com.acme.order.OrderController#create，OrderController.java:36）。请求体嵌套，用字段树最清楚：
+
+```json5
+{
+  "orderId":   "string!",                 // @NotBlank @Size(<=32)
+  "items": [
+    {"sku": "string!", "qty": "int! >0", "price": "decimal!"}
+  ],
+  "address": {
+    "country": "string!",                 // ISO-3166-1 alpha-2
+    "city":    "string!",
+    "zip":     "string"
+  },
+  "couponCode": "string?"                 // 可选
+}
+```
+
+DTO: com.acme.order.OrderRequest（OrderRequest.java:18）；Header `Content-Type: application/json`，鉴权走 `Authorization: Bearer <jwt>`。
+
+- **数据库**：MyBatis `mapper/OrderMapper.xml` 在 `orders`、`order_items` 表 INSERT
+- **第三方**：调内部库存服务 `http://stock-svc/reserve`（POST，`{sku, qty}` 列表）锁库存
+
+#### GET /api/orders/{id}
+
+已登录用户查订单详情（com.acme.order.OrderController#get，OrderController.java:74）。`**请求**: path `id` (Long)`。从 `orders`/`order_items` 表读后返回。
 
 ## 未跟到的引用
 
