@@ -36,9 +36,19 @@ sequenceDiagram
 ```
 
 - **请求**：body JSON `{username: string!, password: string!}`（DTO: com.acme.auth.LoginRequest，LoginRequest.java:11，字段都 @NotBlank）
-- **加解密**：`BCrypt.checkpw` 校验密码哈希——避免明文比对；`IdpController#issue`（services/idp-svc/.../IdpController.java:25）用 RS256 签 JWT，私钥由 `IdpKmsClient`（IdpKmsClient.java:18）启动时从 KMS 拉到本地缓存
-- **配置**：启动读 `config/oauth.yaml`（YAML，OAuth 客户端配置）
-- **日志**：每次登录尝试写一行 Logback 到 `/var/log/acme/auth.log`
+- **第三方**（IDP 换 JWT）：
+
+  ```
+  POST http://internal-idp/token
+  - Content-Type: application/x-www-form-urlencoded
+  - Authorization: Basic <base64(client_id:secret)>
+  - body: grant_type=password&username={body.username}&password={body.password}
+  - 客户端: RestTemplate（com.acme.auth.OAuthClient，OAuthClient.java:31）
+  ```
+
+  对端 com.acme.idp.IdpController#issue（services/idp-svc/.../IdpController.java:25）：从 Redis 拉用户角色集 → RS256 签 JWT
+- **加解密**：`BCrypt.checkpw` 校验密码哈希（避免明文比对）；`IdpKmsClient`（IdpKmsClient.java:18）启动时从 KMS 拉 RS256 私钥到本地缓存，每小时刷新
+- **文件**：读 `config/oauth.yaml`（YAML，启动加载 OAuth 客户端配置）；追加一行到 `/var/log/acme/auth.log`（Logback 行日志，每次登录尝试一行）
 
 #### POST /api/jobs/run-report
 
@@ -78,7 +88,14 @@ sequenceDiagram
 DTO: com.acme.order.OrderRequest（OrderRequest.java:18）；Header `Content-Type: application/json`，鉴权走 `Authorization: Bearer <jwt>`。
 
 - **数据库**：MyBatis `mapper/OrderMapper.xml` 在 `orders`、`order_items` 表 INSERT
-- **第三方**：调内部库存服务 `http://stock-svc/reserve`（POST，`{sku, qty}` 列表）锁库存
+- **第三方**（库存锁定）：
+
+  ```
+  POST http://stock-svc/v1/reserve
+  - Content-Type: application/json
+  - body: [{sku: "{items[].sku}", qty: "{items[].qty}"}, ...]
+  - 客户端: Feign（com.acme.order.StockClient，StockClient.java:12）
+  ```
 
 #### GET /api/orders/{id}
 
