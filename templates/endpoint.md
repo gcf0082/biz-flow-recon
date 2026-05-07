@@ -41,7 +41,6 @@ sequenceDiagram
 - **第三方（外部通道）**：网关把请求转发到 `https://channel.example.com`
 - **加解密**：`HMAC-SHA256` 签外呼报文——避免支付通道篡改
 - **数据库**：网关用 MyBatis `mapper/TransferMapper.xml` 在 `ledger` 表 INSERT trade / UPDATE balance
-- **输入流向**：`body.toAccount` 与 `body.orderId` → `log.info("transfer to={} order={}", toAccount, orderId)` → `/var/log/acme/pay.log`（TransferController.java:82）—— 写日志
 - **日志**：异步追加一行到 `/var/log/acme/pay.log`
 
 ## 未跟到的引用
