@@ -1,9 +1,8 @@
 <!--
 默认输出模板。可被项目里同名文件覆盖。
-- 粒度 B（默认）：用整份骨架——顶层"整体在做什么" + 子功能分组 + 接口块。
-- 粒度 C（单接口）：只取一个接口块——把它的 `#### POST /api/...` 提到顶层 `# POST /api/... — 一句话功能`，不要顶层叙述和子功能分组。
+- 粒度 B：用整份骨架（顶层叙述 + 子功能分组 + 接口块）。
+- 粒度 C：只取一个接口块，把 `#### POST /api/...` 提到顶层 `# POST /api/... — 一句话功能`。
 -->
-
 
 # {范围名} 业务流讲解
 
@@ -17,7 +16,7 @@
 
 #### POST /api/login
 
-未登录用户的登录入口（com.acme.auth.AuthController#login，AuthController.java:42）。涉及多服务跨调用，画图最清楚：
+未登录用户的登录入口（com.acme.auth.AuthController#login，AuthController.java:42）。多服务跨调用：
 
 ```mermaid
 sequenceDiagram
@@ -30,11 +29,10 @@ sequenceDiagram
     participant K as KMS
 
     U->>A: POST /api/login (username, password)
-    A->>DB: 查密码哈希
-    A->>A: BCrypt.checkpw
+    A->>DB: 查密码哈希; BCrypt.checkpw
     A->>IDP: POST /token (subject)
     IDP->>R: 拉用户角色集
-    IDP->>K: 取 RS256 私钥(本地缓存命中,每小时刷)
+    IDP->>K: 取 RS256 私钥(本地缓存,每小时刷)
     IDP-->>A: JWT
     A->>R: 写会话
     A-->>U: 200 {token}
@@ -51,19 +49,18 @@ sequenceDiagram
   - 客户端: RestTemplate（com.acme.auth.OAuthClient，OAuthClient.java:31）
   ```
 
-  对端 com.acme.idp.IdpController#issue（services/idp-svc/.../IdpController.java:25）：从 Redis 拉用户角色集 → RS256 签 JWT
-- **加解密**：`BCrypt.checkpw` 校验密码哈希（避免明文比对）；`IdpKmsClient`（IdpKmsClient.java:18）启动时从 KMS 拉 RS256 私钥到本地缓存，每小时刷新
-- **文件**：读 `config/oauth.yaml`（YAML，启动加载 OAuth 客户端配置）；追加一行到 `/var/log/acme/auth.log`（Logback 行日志，每次登录尝试一行）
+  对端 com.acme.idp.IdpController#issue（services/idp-svc/.../IdpController.java:25）：Redis 拉角色集 → KmsClient 取 RS256 私钥（IdpKmsClient.java:18，本地缓存每小时刷）→ 签 JWT
+- **加解密**：BCrypt.checkpw 校验密码哈希（避免明文比对）
+- **文件**：读 `config/oauth.yaml`（YAML，启动加载）；追加 `/var/log/acme/auth.log`（Logback，每次登录一行）
 
 #### POST /api/jobs/run-report
 
-管理员触发离线对账（com.acme.ops.JobController#runReport，JobController.java:73）。流程顺序，列编号步骤：
+管理员触发离线对账（com.acme.ops.JobController#runReport，JobController.java:73）。顺序流程：
 
 1. `ProcessBuilder` 执行 `scripts/run-report.sh`
-2. 脚本里 `spark-submit` 一个打包在 `jobs/report.jar` 的作业，数据源是 PostgreSQL `bills` 库的 `txn_*` 分区表
-3. 作业把 CSV 写到 `/data/reports/{date}/`
-4. `awscli sync` 同步到 `s3://acme-reports/`
-5. 脚本退出码作为接口返回；不记业务日志
+2. 脚本 `spark-submit jobs/report.jar`（数据源 PostgreSQL `bills.txn_*`）
+3. 作业把 CSV 写到 `/data/reports/{date}/`，再 `awscli sync` 到 `s3://acme-reports/`
+4. 脚本退出码作为接口返回；不记业务日志
 
 #### GET /api/users/me
 
@@ -73,7 +70,7 @@ sequenceDiagram
 
 #### POST /api/orders
 
-已登录用户提交订单（com.acme.order.OrderController#create，OrderController.java:36）。请求体嵌套，用字段树最清楚：
+已登录用户提交订单（com.acme.order.OrderController#create，OrderController.java:36）。Body 嵌套：
 
 ```json5
 {
@@ -93,18 +90,7 @@ sequenceDiagram
 DTO: com.acme.order.OrderRequest（OrderRequest.java:18）；Header `Content-Type: application/json`，鉴权走 `Authorization: Bearer <jwt>`。
 
 - **数据库**：MyBatis `mapper/OrderMapper.xml` 在 `orders`、`order_items` 表 INSERT
-- **第三方**（库存锁定）：
-
-  ```
-  POST http://stock-svc/v1/reserve
-  - Content-Type: application/json
-  - body: [{sku: "{items[].sku}", qty: "{items[].qty}"}, ...]
-  - 客户端: Feign（com.acme.order.StockClient，StockClient.java:12）
-  ```
-
-#### GET /api/orders/{id}
-
-已登录用户查订单详情（com.acme.order.OrderController#get，OrderController.java:74）。`**请求**: path `id` (Long)`。从 `orders`/`order_items` 表读后返回。
+- **第三方**：调内部库存服务 `POST http://stock-svc/v1/reserve`（Feign，com.acme.order.StockClient，StockClient.java:12，body 是 `[{sku, qty}]` 列表）
 
 #### GET /api/files/{name}
 
@@ -116,4 +102,4 @@ DTO: com.acme.order.OrderRequest（OrderRequest.java:18）；Header `Content-Typ
 
 仅在存在未找到的下钻目标时写这一节，按 `<引用> — 调用点 (文件:行号)` 一条一行；没有就**整节略掉**。
 
-- `http://internal-billing/charge` — 调用点 com.acme.pay.PayClient#charge（PayClient.java:31），未在工作区找到对应服务
+- `http://internal-billing/charge` — com.acme.pay.PayClient#charge（PayClient.java:31）
