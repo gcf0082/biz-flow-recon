@@ -18,6 +18,26 @@ mapper/TransferMapper.xml 里 INSERT trade、UPDATE balance），并向真正外
 通道 https://channel.example.com 转发**。回执写库后异步往 /var/log/acme/pay.log
 追加一行交易记录。代码在 src/main/java/com/acme/pay/。
 
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as 已登录用户
+    participant T as TransferController
+    participant GW as GwController (pay-gw)
+    participant L as ledger 库
+    participant CH as channel.example.com
+
+    U->>T: POST /api/transfer
+    T->>T: HMAC-SHA256 签名
+    T->>GW: POST /v2/transfer (X-Sign)
+    GW->>L: INSERT trade / UPDATE balance
+    GW->>CH: 转发支付报文
+    CH-->>GW: 受理回执
+    GW-->>T: 受理回执
+    T-->>U: 200
+    Note over T: 异步写 /var/log/acme/pay.log
+```
+
 ## 未跟到的引用
 
 仅当存在未在工作区找到的下钻目标时才写这一节；没有就**整节略掉**。

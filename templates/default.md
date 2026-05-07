@@ -33,6 +33,27 @@ http://internal-idp/token 换 JWT，对端实现是 com.acme.idp.IdpController#i
 每次登录尝试往 /var/log/acme/auth.log 写一行 Logback。代码在
 src/main/java/com/acme/auth/。
 
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as 用户
+    participant A as AuthController
+    participant DB as 用户库
+    participant IDP as IdpController (idp-svc)
+    participant R as Redis
+    participant K as KMS
+
+    U->>A: POST /api/login (username, password)
+    A->>DB: 查用户密码哈希
+    A->>A: BCrypt.checkpw
+    A->>IDP: POST /token (subject)
+    IDP->>R: 拉角色集
+    IDP->>K: 取 RS256 私钥(缓存命中)
+    IDP-->>A: JWT
+    A->>R: 写会话
+    A-->>U: 200 {token}
+```
+
 #### POST /api/jobs/run-report
 
 管理员触发离线对账（com.acme.ops.JobController#runReport，JobController.java:73）。
@@ -46,6 +67,8 @@ sync 到 s3://acme-reports/**。脚本退出码作为接口返回；不记业务
 
 已登录用户读取自己的资料（com.acme.user.UserController#me，UserController.java:18，
 代码在 src/main/java/com/acme/user/）。
+
+（这种简单单步流程**不配图**——一句话就讲清楚了，加图反而多余。）
 
 ### 子功能 2：订单管理
 
