@@ -1,7 +1,14 @@
 <!--
 biz-flow-recon 默认输出模板（粒度 B：子功能 + 接口）。
 本文件可被被分析项目里的 `biz-flow-recon/templates/default.md` 覆盖。
-模板就是一份示例骨架——读完照样写一份给当前分析对象。
+读完照样写一份给当前分析对象。
+
+要点：
+- 接口下面**不用 bullet**，写 1-2 段散文。
+- 没有发生的事实就不提；下钻得到的下游事实继续织进同一段（用从句串），不要嵌套子节。
+- 段落里嵌入 (类#方法，文件:行号) 作为可定位锚点。
+- 不评判风险，只描述事实。
+- 找不到的下钻目标必须点名 + 在末尾"未跟到的引用"列出。
 -->
 
 # {范围名} 业务流讲解
@@ -17,14 +24,23 @@ biz-flow-recon 默认输出模板（粒度 B：子功能 + 接口）。
 #### POST /api/login
 
 未登录用户的登录入口（com.acme.auth.AuthController#login，AuthController.java:42）。
-进来先用 BCrypt.checkpw 校验密码哈希，避免明文比对；通过后向外部身份提供方
-https://idp.example.com/oauth/token 发一次 POST application/x-www-form-urlencoded，
-Header 带 Authorization: Basic <base64(client_id:secret)>，body 是
-grant_type=password&username=...&password=...，使用 RestTemplate
-（OAuthClient.java:31）。换回的身份信息再由 JJWT 以 HS256 签发会话 Token，
-密钥取自 JWT_SECRET 环境变量，颁给前端保会话。配置 config/oauth.yaml（YAML）
-在启动时读，每次登录尝试会往 /var/log/acme/auth.log 写一行 Logback 日志。
-代码在 src/main/java/com/acme/auth/。
+进来先用 BCrypt.checkpw 校验密码哈希，**通过后调内部令牌服务
+http://internal-idp/token 换 JWT，对端实现是 com.acme.idp.IdpController#issue
+（services/idp-svc/src/main/java/com/acme/idp/IdpController.java:25），那边
+从 Redis 拉用户的角色集合再用 RS256 签 Token，私钥在启动时由 KmsClient
+从 KMS 拉到本地缓存（IdpKmsClient.java:18，启动后每小时刷一次）**；JWT 拿
+回后，登录侧再把会话信息回写 Redis。配置 config/oauth.yaml（YAML）启动时读，
+每次登录尝试往 /var/log/acme/auth.log 写一行 Logback。代码在
+src/main/java/com/acme/auth/。
+
+#### POST /api/jobs/run-report
+
+管理员触发离线对账（com.acme.ops.JobController#runReport，JobController.java:73）。
+调用 `ProcessBuilder` 执行 `scripts/run-report.sh`，**那个脚本里先
+`spark-submit` 一个打包在 jobs/report.jar 的作业（数据源是 PostgreSQL `bills`
+库的 `txn_*` 分区表），结束后把 CSV 写到 /data/reports/{date}/，再用 awscli
+sync 到 s3://acme-reports/**。脚本退出码作为接口返回；不记业务日志。
+代码在 src/main/java/com/acme/ops/、scripts/run-report.sh。
 
 #### GET /api/users/me
 
@@ -35,12 +51,11 @@ grant_type=password&username=...&password=...，使用 RestTemplate
 
 #### POST /api/orders
 
-...（同样 1-2 段散文）
+...（同样 1-2 段散文，下钻到下游服务/脚本/SQL）
 
-<!--
-注意：
-- 接口下面**不用 bullet**，写 1-2 段散文。
-- 没有发生的事实就不提（如 /api/users/me 没有 I/O / 命令 / 第三方 / 加解密，就一句话讲完）。
-- 段落里嵌入 (类#方法，文件:行号) 作为可定位锚点。
-- 不评判风险，只描述事实。
--->
+## 未跟到的引用
+
+仅当存在未在工作区找到的下钻目标时才写这一节，按下面格式一条一行；没有就**整节略掉**。
+
+- `scripts/legacy-import.py` — 调用点 com.acme.imp.ImportRunner#run（ImportRunner.java:54）
+- `http://internal-billing/charge` — 调用点 com.acme.pay.PayClient#charge（PayClient.java:31），未在工作区找到对应服务
