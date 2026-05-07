@@ -48,32 +48,6 @@ sequenceDiagram
 
 已登录用户读取自己的资料（com.acme.user.UserController#me，UserController.java:18）。
 
-### 子功能 2：订单管理
-
-#### POST /api/orders
-
-已登录用户提交订单（com.acme.order.OrderController#create，OrderController.java:36）。Body 嵌套：
-
-```json5
-{
-  "orderId":   "string!",                 // @NotBlank @Size(<=32)
-  "items": [
-    {"sku": "string!", "qty": "int! >0", "price": "decimal!"}
-  ],
-  "address": {
-    "country": "string!",                 // ISO-3166-1 alpha-2
-    "city":    "string!",
-    "zip":     "string"
-  },
-  "couponCode": "string?"                 // 可选
-}
-```
-
-DTO: com.acme.order.OrderRequest（OrderRequest.java:18）；Header `Content-Type: application/json`，鉴权走 `Authorization: Bearer <jwt>`。
-
-- **数据库**：MyBatis `mapper/OrderMapper.xml` 在 `orders`、`order_items` 表 INSERT
-- **第三方**：调内部库存服务 `POST http://stock-svc/v1/reserve`（Feign，com.acme.order.StockClient，StockClient.java:12，body 是 `[{sku, qty}]` 列表）
-
 ## 未跟到的引用
 
 仅在存在未找到的下钻目标时写这一节，按 `<引用> — 调用点 (文件:行号)` 一条一行；没有就**整节略掉**。
