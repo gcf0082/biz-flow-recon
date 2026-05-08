@@ -19,14 +19,15 @@ features.md）使用——单接口产物文件不包含此类外层包装。
 
 #### POST /api/files/upload
 
-用户向系统提交一份业务文件（合同、表单、附件等）进行存档（com.acme.file.UploadController#upload，UploadController.java:48）。处理过程分为三步——**落地原始文件 → 触发内容扫描 → 归档扫描结果**；用户传入的 `filename` 贯穿这三步。流程图整合业务步骤与高危动作：
+用户向系统提交一份业务文件（合同、表单、附件等）进行存档（com.acme.file.UploadController#upload，UploadController.java:48）。处理过程分为四步——**落地原始文件 → 触发内容扫描 → 归档扫描结果 → 上报到监控**；用户传入的 `filename` 贯穿前三步。流程图整合业务步骤与高危动作：
 
 ```mermaid
 flowchart TD
     IN["body.filename (用户输入)"] --> WRITE["① 落地原始文件<br/>写 /data/uploads/{filename}"]
     IN --> SCAN
     WRITE --> SCAN["② 触发内容扫描<br/>ProcessBuilder bash scripts/scan.sh /data/uploads/{filename}"]
-    SCAN --> RESULT["③ 归档扫描结果<br/>写 /data/scan-results/{filename}.json"]
+    SCAN --> ARCHIVE["③ 归档扫描结果<br/>写 /data/scan-results/{filename}.json"]
+    ARCHIVE --> REPORT["④ 上报到监控<br/>POST https://monitor.internal/scan-events"]
 ```
 
 - **请求**：multipart/form-data，含 `file`（binary，原始内容）+ form 字段 `filename` (string!)
@@ -34,8 +35,14 @@ flowchart TD
   - `body.filename` → `Paths.get("/data/uploads/" + filename)` → `Files.write`（UploadController.java:62）—— 拼接到路径
   - `body.filename` → `ProcessBuilder("bash", "scripts/scan.sh", "/data/uploads/" + filename)`（UploadController.java:71）—— 拼接到命令
   - `body.filename` → `Paths.get("/data/scan-results/" + filename + ".json")` → `Files.write`（UploadController.java:84）—— 拼接到路径
+- **关键控制点**：
+  - TLS 证书校验：关闭（OkHttp 自定义 trustAll `X509TrustManager` + `HostnameVerifier` 恒返回 true，MonitorClient.java:18）（开关）
+  - 文件后缀白名单：`.pdf` / `.docx` / `.jpg` / `.png`（UploadController.java:41）（判断）
+  - 上传大小限制：50 MB（`spring.servlet.multipart.max-file-size`，application.yml:67）（限制）
+  - 扫描脚本路径：硬编码 `scripts/scan.sh`，未读环境变量或配置（UploadController.java:71）（配置）
 - **文件**：写入 `/data/uploads/{body.filename}`（用户传入文件名，原始上传内容落盘）；写入 `/data/scan-results/{body.filename}.json`（JSON，扫描结果）
 - **命令**：`ProcessBuilder` 执行 `bash scripts/scan.sh /data/uploads/{body.filename}`（UploadController.java:71）
+- **第三方**（监控上报）：`POST https://monitor.internal/scan-events`，Content-Type `application/json`，body `{filename, scanResultPath, status}`；客户端 OkHttp（com.acme.monitor.MonitorClient，MonitorClient.java:33）
 
 ## 未能追溯的引用
 
