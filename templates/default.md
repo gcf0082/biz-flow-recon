@@ -17,42 +17,28 @@ features.md）使用——单接口产物文件不包含此类外层包装。
 
 ### 子功能 1：文件管理
 
-#### GET /api/files/{name}
+#### POST /api/files/upload
 
-已登录用户下载导出文件（com.acme.file.FileController#download，FileController.java:29）。入参直接拼接至后端路径，流程简单：
+已登录用户上传文件并触发自动扫描（com.acme.file.UploadController#upload，UploadController.java:48）。单个用户输入贯穿多个高危动作，绘图揭示传播链路：
 
 ```mermaid
-sequenceDiagram
-    autonumber
-    participant U as 用户
-    participant C as FileController
-    participant FS as 本地磁盘
-
-    U->>C: GET /api/files/{name}
-    C->>FS: Paths.get("/data/exports/" + name)
-    FS-->>C: InputStream
-    C-->>U: Files.copy(in, response)
+flowchart TD
+    IN["body.filename (用户输入)"] --> WRITE["写 /data/uploads/{filename} (写文件)"]
+    IN --> SCAN["ProcessBuilder bash scripts/scan.sh /data/uploads/{filename} (拼命令 + 外部进程)"]
+    WRITE --> SCAN
+    SCAN --> RESULT["写 /data/scan-results/{filename}.json (写文件)"]
 ```
 
-- **请求**：path `name` (string)
-- **输入流向**：`path.name` → `Paths.get("/data/exports/" + name)` → `Files.copy(path, OutputStream)`（FileController.java:34）—— 拼接到路径
-- **文件**：读取 `/data/exports/{path.name}`（按用户传入文件名读取并写入响应流）
-
-#### POST /api/jobs/run-report
-
-管理员触发离线对账（com.acme.ops.JobController#runReport，JobController.java:73）。顺序执行流程：
-
-1. `ProcessBuilder` 执行 `scripts/run-report.sh`
-2. 脚本运行 `spark-submit jobs/report.jar`（数据源 PostgreSQL `bills.txn_*`）
-3. 作业将 CSV 写入 `/data/reports/{date}/`，随后 `awscli sync` 至 `s3://acme-reports/`
-4. 脚本退出码作为接口返回；不记业务日志
-
-#### GET /api/users/me
-
-已登录用户读取自身资料（com.acme.user.UserController#me，UserController.java:18）。
+- **请求**：multipart/form-data，含 `file`（binary，原始内容）+ form 字段 `filename` (string!)
+- **输入流向**：
+  - `body.filename` → `Paths.get("/data/uploads/" + filename)` → `Files.write`（UploadController.java:62）—— 拼接到路径
+  - `body.filename` → `ProcessBuilder("bash", "scripts/scan.sh", "/data/uploads/" + filename)`（UploadController.java:71）—— 拼接到命令
+  - `body.filename` → `Paths.get("/data/scan-results/" + filename + ".json")` → `Files.write`（UploadController.java:84）—— 拼接到路径
+- **文件**：写入 `/data/uploads/{body.filename}`（用户传入文件名，原始上传内容落盘）；写入 `/data/scan-results/{body.filename}.json`（JSON，扫描结果）
+- **命令**：`ProcessBuilder` 执行 `bash scripts/scan.sh /data/uploads/{body.filename}`（UploadController.java:71）
 
 ## 未能追溯的引用
 
 仅在存在未能定位的下游目标时撰写本节，按 `<引用> — 调用点 (文件:行号)` 一条一行；无则**略去整节**。
 
-- `http://internal-billing/charge` — com.acme.pay.PayClient#charge（PayClient.java:31）
+- `scripts/scan.sh` — 调用点 com.acme.file.UploadController#upload（UploadController.java:71），未在工作区找到该脚本
