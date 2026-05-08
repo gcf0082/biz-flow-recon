@@ -19,7 +19,9 @@ features.md）使用——单接口产物文件不包含此类外层包装。
 
 #### POST /api/files/upload
 
-已登录用户上传文件并触发自动扫描（com.acme.file.UploadController#upload，UploadController.java:48）。单个用户输入贯穿多个高危动作，绘图揭示传播链路：
+已登录用户向系统提交一份业务文件（合同、表单、附件等）进行存档（com.acme.file.UploadController#upload，UploadController.java:48）。controller 先按用户提供的文件名将原始内容落地到本地存储，随后调用扫描脚本对该文件做内容检查（具体检查项由脚本决定），扫描结果以 JSON 形式归档至结果目录，供后续业务消费。
+
+由于用户传入的 `filename` 同时贯穿落地路径、扫描命令参数、结果路径三个高危动作，绘图揭示传播链路：
 
 ```mermaid
 flowchart TD
