@@ -19,16 +19,14 @@ features.md）使用——单接口产物文件不包含此类外层包装。
 
 #### POST /api/files/upload
 
-已登录用户向系统提交一份业务文件（合同、表单、附件等）进行存档（com.acme.file.UploadController#upload，UploadController.java:48）。controller 先按用户提供的文件名将原始内容落地到本地存储，随后调用扫描脚本对该文件做内容检查（具体检查项由脚本决定），扫描结果以 JSON 形式归档至结果目录，供后续业务消费。
-
-由于用户传入的 `filename` 同时贯穿落地路径、扫描命令参数、结果路径三个高危动作，绘图揭示传播链路：
+已登录用户向系统提交一份业务文件（合同、表单、附件等）进行存档（com.acme.file.UploadController#upload，UploadController.java:48）。处理过程分为三步——**落地原始文件 → 触发内容扫描 → 归档扫描结果**；用户传入的 `filename` 贯穿这三步。流程图整合业务步骤与高危动作：
 
 ```mermaid
 flowchart TD
-    IN["body.filename (用户输入)"] --> WRITE["写 /data/uploads/{filename} (写文件)"]
-    IN --> SCAN["ProcessBuilder bash scripts/scan.sh /data/uploads/{filename} (拼命令 + 外部进程)"]
-    WRITE --> SCAN
-    SCAN --> RESULT["写 /data/scan-results/{filename}.json (写文件)"]
+    IN["body.filename (用户输入)"] --> WRITE["① 落地原始文件<br/>写 /data/uploads/{filename}"]
+    IN --> SCAN
+    WRITE --> SCAN["② 触发内容扫描<br/>ProcessBuilder bash scripts/scan.sh /data/uploads/{filename}"]
+    SCAN --> RESULT["③ 归档扫描结果<br/>写 /data/scan-results/{filename}.json"]
 ```
 
 - **请求**：multipart/form-data，含 `file`（binary，原始内容）+ form 字段 `filename` (string!)
