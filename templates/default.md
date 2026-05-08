@@ -19,7 +19,7 @@ features.md）使用——单接口产物文件不包含此类外层包装。
 
 #### POST /api/files/upload
 
-已登录用户向系统提交一份业务文件（合同、表单、附件等）进行存档（com.acme.file.UploadController#upload，UploadController.java:48）。处理过程分为三步——**落地原始文件 → 触发内容扫描 → 归档扫描结果**；用户传入的 `filename` 贯穿这三步。流程图整合业务步骤与高危动作：
+用户向系统提交一份业务文件（合同、表单、附件等）进行存档（com.acme.file.UploadController#upload，UploadController.java:48）。处理过程分为三步——**落地原始文件 → 触发内容扫描 → 归档扫描结果**；用户传入的 `filename` 贯穿这三步。流程图整合业务步骤与高危动作：
 
 ```mermaid
 flowchart TD
