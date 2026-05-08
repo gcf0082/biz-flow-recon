@@ -19,15 +19,46 @@ features.md）使用——单接口产物文件不包含此类外层包装。
 
 #### POST /api/files/upload
 
-用户向系统提交一份业务文件（合同、表单、附件等）进行存档（com.acme.file.UploadController#upload，UploadController.java:48）。处理过程分为四步——**落地原始文件 → 触发内容扫描 → 归档扫描结果 → 上报到监控**；用户传入的 `filename` 贯穿前三步。流程图整合业务步骤与高危动作：
+用户向系统提交一份业务文件（合同、表单、附件等）进行存档（com.acme.file.UploadController#upload，UploadController.java:48）。处理流程分为**前置校验 → 核心处理 → 异常终止**三组：先校验文件后缀与大小，通过后落地原始文件、触发扫描、归档结果、上报监控；任一校验失败直接返回 4xx。
 
 ```mermaid
 flowchart TD
-    IN["body.filename (用户输入)"] --> WRITE["① 落地原始文件<br/>写 /data/uploads/{filename}"]
-    IN --> SCAN
-    WRITE --> SCAN["② 触发内容扫描<br/>ProcessBuilder bash scripts/scan.sh /data/uploads/{filename}"]
-    SCAN --> ARCHIVE["③ 归档扫描结果<br/>写 /data/scan-results/{filename}.json"]
-    ARCHIVE --> REPORT["④ 上报到监控<br/>POST https://monitor.internal/scan-events"]
+    IN["body.filename（用户输入）<br/><small>📍 UploadController.java:48</small>"] --> CHECK_EXT
+
+    subgraph 前置校验
+        CHECK_EXT{"① 校验文件后缀<br/>是否在 .pdf / .docx / .jpg / .png 内？<br/><small>📍 UploadController.java:41</small>"}
+        CHECK_SIZE{"② 校验文件大小<br/>是否 ≤ 50 MB？<br/><small>📍 application.yml:67</small>"}
+    end
+
+    subgraph 异常终止
+        REJECT_EXT["❌ 拒绝：不支持的文件类型<br/>返回 400<br/><small>📍 UploadController.java:52</small>"]
+        REJECT_SIZE["❌ 拒绝：文件体积超限<br/>返回 413<br/><small>📍 UploadController.java:55</small>"]
+    end
+
+    subgraph 核心处理
+        WRITE["③ 落地原始文件<br/>写 /data/uploads/{filename}<br/><small>📍 UploadController.java:62</small>"]
+        SCAN["④ 触发内容扫描<br/>ProcessBuilder bash scripts/scan.sh /data/uploads/{filename}<br/><small>📍 UploadController.java:71</small>"]
+        ARCHIVE["⑤ 归档扫描结果<br/>写 /data/scan-results/{filename}.json<br/><small>📍 UploadController.java:84</small>"]
+        REPORT["⑥ 上报到监控<br/>POST https://monitor.internal/scan-events<br/><small>📍 MonitorClient.java:33</small>"]
+    end
+
+    CHECK_EXT -->|否| REJECT_EXT
+    CHECK_EXT -->|是| CHECK_SIZE
+    CHECK_SIZE -->|否| REJECT_SIZE
+    CHECK_SIZE -->|是| WRITE
+    WRITE --> SCAN
+    SCAN --> ARCHIVE
+    ARCHIVE --> REPORT
+
+    style IN fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
+    style CHECK_EXT fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
+    style CHECK_SIZE fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
+    style REJECT_EXT fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
+    style REJECT_SIZE fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
+    style WRITE fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
+    style SCAN fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
+    style ARCHIVE fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
+    style REPORT fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
 ```
 
 - **请求**：multipart/form-data，含 `file`（binary，原始内容）+ form 字段 `filename` (string!)
