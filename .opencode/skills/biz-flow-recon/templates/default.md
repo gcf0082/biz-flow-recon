@@ -5,6 +5,11 @@
 标题升级为顶层 `# {METHOD} {URL} — 一句话功能`，正文格式照搬。本文件的顶层
 "业务流讲解" / "整体在做什么" / "子功能 N" 等结构面向 aggregator（overview.md /
 features.md）使用——单接口产物文件不包含此类外层包装。
+
+约定：图自包含——优先把输入流向、关键控制点、硬编码标注等事实**嵌入节点标签**；
+图能承载的下方文字 labeled 列表不再重复，仅保留图无法承载的（如 DTO 全限定名 /
+请求体字段树）。起点节点统一用 `START([开始])`，接口 URL / 请求维度由标题与
+`**请求**` 行承载。
 -->
 
 # {范围名} 业务流讲解
@@ -23,23 +28,23 @@ features.md）使用——单接口产物文件不包含此类外层包装。
 
 ```mermaid
 flowchart TD
-    ENDPOINT["POST /api/files/upload<br/>multipart: file + filename<br/><small>UploadController.java:48</small>"] --> CHECK_EXT
+    START([开始]) --> CHECK_EXT
 
     subgraph 前置校验
-        CHECK_EXT{"① 校验 body.filename 后缀<br/>是否在 .pdf / .docx / .jpg / .png 内？<br/><small>UploadController.java:41</small>"}
-        CHECK_SIZE{"② 校验 file 大小<br/>是否 ≤ 50 MB？<br/><small>application.yml:67</small>"}
+        CHECK_EXT{"① 校验 body.filename 后缀<br/>白名单 .pdf / .docx / .jpg / .png<br/><small>UploadController.java:41 · 关键控制点（判断）</small>"}
+        CHECK_SIZE{"② 校验 file 大小<br/>≤ 50 MB<br/><small>application.yml:67 · 关键控制点（限制）</small>"}
     end
 
     subgraph 异常终止
-        REJECT_EXT["❌ 拒绝：不支持的文件类型<br/>返回 400<br/><small>UploadController.java:52</small>"]
-        REJECT_SIZE["❌ 拒绝：文件体积超限<br/>返回 413<br/><small>UploadController.java:55</small>"]
+        REJECT_EXT["❌ 返回 400 不支持类型<br/><small>UploadController.java:52</small>"]
+        REJECT_SIZE["❌ 返回 413 体积超限<br/><small>UploadController.java:55</small>"]
     end
 
     subgraph 核心处理
-        WRITE["③ 落地原始文件<br/>写 /data/uploads/{body.filename}<br/><small>UploadController.java:62</small>"]
-        SCAN["④ 触发内容扫描<br/>ProcessBuilder bash scripts/scan.sh /data/uploads/{body.filename}<br/><small>UploadController.java:71</small>"]
-        ARCHIVE["⑤ 归档扫描结果<br/>写 /data/scan-results/{body.filename}.json<br/><small>UploadController.java:84</small>"]
-        REPORT["⑥ 上报到监控<br/>POST https://monitor.internal/scan-events · 硬编码<br/><small>MonitorClient.java:33</small>"]
+        WRITE["③ 落地原始文件<br/>写 /data/uploads/{body.filename}<br/>—— body.filename 拼接到路径<br/><small>UploadController.java:62</small>"]
+        SCAN["④ 触发内容扫描<br/>ProcessBuilder bash scripts/scan.sh /data/uploads/{body.filename}<br/>—— body.filename 拼接到命令；scripts/scan.sh · 硬编码<br/><small>UploadController.java:71 · 关键控制点（配置）</small>"]
+        ARCHIVE["⑤ 归档扫描结果<br/>写 /data/scan-results/{body.filename}.json<br/>—— body.filename 拼接到路径<br/><small>UploadController.java:84</small>"]
+        REPORT["⑥ 上报到监控<br/>POST https://monitor.internal/scan-events · 硬编码<br/>OkHttp · TLS 校验关闭（trustAll X509TrustManager + HostnameVerifier 恒真）<br/><small>MonitorClient.java:33 · 关键控制点（开关）</small>"]
     end
 
     CHECK_EXT -->|否| REJECT_EXT
@@ -50,7 +55,7 @@ flowchart TD
     SCAN --> ARCHIVE
     ARCHIVE --> REPORT
 
-    style ENDPOINT fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
+    style START fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
     style CHECK_EXT fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
     style CHECK_SIZE fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
     style REJECT_EXT fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
@@ -61,19 +66,7 @@ flowchart TD
     style REPORT fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
 ```
 
-- **请求**：multipart/form-data，含 `file`（binary，原始内容）+ form 字段 `filename` (string!)
-- **输入流向**：
-  - `body.filename` → `Paths.get("/data/uploads/" + filename)` → `Files.write`（UploadController.java:62）—— 拼接到路径
-  - `body.filename` → `ProcessBuilder("bash", "scripts/scan.sh", "/data/uploads/" + filename)`（UploadController.java:71）—— 拼接到命令
-  - `body.filename` → `Paths.get("/data/scan-results/" + filename + ".json")` → `Files.write`（UploadController.java:84）—— 拼接到路径
-- **关键控制点**：
-  - TLS 证书校验：关闭（OkHttp 自定义 trustAll `X509TrustManager` + `HostnameVerifier` 恒返回 true，MonitorClient.java:18）（开关）
-  - 文件后缀白名单：`.pdf` / `.docx` / `.jpg` / `.png`（UploadController.java:41）（判断）
-  - 上传大小限制：50 MB（`spring.servlet.multipart.max-file-size`，application.yml:67）（限制）
-  - 扫描脚本路径：硬编码 `scripts/scan.sh`，未读环境变量或配置（UploadController.java:71）（配置）
-- **文件**：写入 `/data/uploads/{body.filename}`（用户传入文件名，原始上传内容落盘）；写入 `/data/scan-results/{body.filename}.json`（JSON，扫描结果）
-- **命令**：`ProcessBuilder` 执行 `bash scripts/scan.sh /data/uploads/{body.filename}`（UploadController.java:71）
-- **第三方**（监控上报）：`POST https://monitor.internal/scan-events`，Content-Type `application/json`，body `{filename, scanResultPath, status}`；客户端 OkHttp（com.acme.monitor.MonitorClient，MonitorClient.java:33）
+- **请求**：multipart/form-data，含 `file`（binary，原始内容）+ form 字段 `filename` (string!)。DTO: 无（直接 `@RequestParam`，UploadController.java:48）
 
 ## 未能追溯的引用
 
