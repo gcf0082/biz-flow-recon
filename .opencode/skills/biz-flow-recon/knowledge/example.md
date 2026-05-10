@@ -14,10 +14,10 @@
 # {项目名} 项目说明
 
 ## 技术栈
-- 后端：{Spring Boot 3.x / FastAPI 0.110 / ...}
+- 后端：{Spring Boot 3.x / ...}
 - 数据库：{PostgreSQL 15 / MySQL 8 / ...}
 - 消息：{Kafka / RabbitMQ / ...}
-- 鉴权：{Spring Security + JWT / DRF SimpleJWT / ...}
+- 鉴权：{Spring Security + JWT / ...}
 
 ## 模块布局
 - `<root>/api/` —— 对外 REST 接口层

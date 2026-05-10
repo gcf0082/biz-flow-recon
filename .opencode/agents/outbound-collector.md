@@ -22,7 +22,7 @@ permission:
 
 任务：
 
-1. 扫描所有**系统作为 client** 的 outbound HTTP/RPC 调用——任何主流 HTTP 客户端、Feign / Retrofit、gRPC stub、Python `requests` / `httpx` / `aiohttp` / `urllib`，以及 `new URL().openConnection()`。
+1. 扫描所有**系统作为 client** 的 outbound HTTP/RPC 调用——任何主流 HTTP 客户端、RPC stub、消息生产端等。
 2. 对每条提取：METHOD / URL（动态部分用 `{var}` 模板，标变量来源）/ Content-Type / 关键 Header（鉴权、签名）/ body 概要 / 调用点 `类#方法 (文件:行号)` / 客户端类型 / 触发的 inbound 接口（可推断时）。
 3. **按目标主机/服务分组聚合**——同一 URL 多次调用合并；动态 URL 按 host 归类。按 `knowledge/conventions.md` 的"内部服务定位"标注：内部 / 外部 / 黑盒（无标注则按启发式：host 含 `internal`/`local`/无 TLD 推为内部）。
 
