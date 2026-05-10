@@ -13,7 +13,6 @@ description: 按安全测试视角解读前/后端代码仓库，输出业务流
 - **未能定位必须显式标注**：在产物里点名"未在工作区找到 X"，并加入末尾的 `## 未能追溯的引用` 节集中列出。**不得编造、不得遗漏、不得静默忽略**。
 - **不中断、不询问**：skill 一旦显式调用即全自动跑到底——不论项目规模、未追溯引用数量、解析歧义。错误按"显式标注 + 继续"处理，**绝不暂停等待用户输入**。用户事后可改 `_plan.md` / 删除产物文件重跑。
 - **每接口一个 subagent + 主 agent 仅调度**：每个接口由独立 subagent 完成；主 agent 不直接产出任何内容文件，仅写调度决策。
-- **强制读 knowledge/**：除 `aggregator-writer` 外的子代理执行前**必须**先读 `<cwd>/.opencode/skills/biz-flow-recon/knowledge/` 全量 .md（含 `briefing.md` / `glossary.md` / `conventions.md` / `modules/*.md`）作为先验——这是项目特有说明的标准位，给项目结构、术语、约定、内部服务定位等关键线索。**子代理自行读，主 agent 不传内容**（避免上下文丢失）。`aggregator-writer` 仅做索引拼装，不读 knowledge/。
 
 ## 取舍
 
@@ -35,7 +34,7 @@ description: 按安全测试视角解读前/后端代码仓库，输出业务流
 | 6 | 派发 `completion-verifier` | 写 `_audit.md`；**不阻断流程** |
 | 7 | 告知用户产物路径 | aggregator 入口 + 横向产物（`interfaces.md`）+ `_audit.md` |
 
-各子代理职责详见 `agents/README.md`，每个子代理的执行规范在 `agents/<name>.md` 自身 frontmatter prompt 内。opencode 用户复制 `agents/*.md` 到被分析项目的 `.opencode/agents/`；Claude Code 用户走 Task tool。
+每个子代理的执行规范在 `agents/<name>.md` 自身 frontmatter prompt 内。opencode 用户复制 `agents/*.md` 到被分析项目的 `.opencode/agents/`；Claude Code 用户走 Task tool。
 
 ## 输出文件名约定
 
@@ -51,4 +50,4 @@ slug 小写连字符；中文转拼音/英文同义词；**默认覆盖同名文
 
 ## 工作目录与模板
 
-`docs/workspace-layout.md` 详述被分析项目 `.opencode/skills/biz-flow-recon/{knowledge,templates,docs}/`、`.opencode/agents/` 与 `biz-flow-recon/{templates,output}/` 的约定。**子代理每次输出前必须读对应模板再撰写**，不得依赖记忆——以确保用户对模板的修改即时生效。
+`docs/workspace-layout.md` 详述被分析项目 `.opencode/skills/biz-flow-recon/{knowledge,templates,docs}/`、`.opencode/agents/` 与 `biz-flow-recon/{templates,output}/` 的约定。子代理输出前先读对应模板再撰写，不依赖记忆——以确保用户对模板的修改即时生效。
