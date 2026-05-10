@@ -5,7 +5,7 @@ description: 按安全测试视角解读前/后端代码仓库，输出业务流
 
 # biz-flow-recon
 
-面向安全测试人员说明代码行为。**主 agent 仅负责调度**——所有内容产出由 6 个子代理完成；本文档是主 agent 的说明书。各子代理的执行细节在 `agents/<name>.md` 自身的 prompt 中。
+面向安全测试人员说明代码行为。**主 agent 仅负责调度**——所有内容产出由 5 个子代理完成；本文档是主 agent 的说明书。各子代理的执行细节在 `agents/<name>.md` 自身的 prompt 中。
 
 ## 共享原则（全员适用）
 
@@ -29,11 +29,11 @@ description: 按安全测试视角解读前/后端代码仓库，输出业务流
 | 0 | 加载工作目录 | 读 `<cwd>/.opencode/skills/biz-flow-recon/knowledge/`（如有）；解析模板路径（项目级覆盖 → skill 默认）。**不写任何文件** |
 | 1 | 确定粒度 | A（整项目）/ B（默认子功能 + 接口）/ C（单接口） |
 | 2 | 派发 `planner` | 写 `_plan.md`；已存在则跳过 |
-| 3 | 并行派发 | `interface-catalog` + `outbound-collector` + N × `endpoint-analyst`（每接口一个）；按 `_plan.md` 顺序派发——`planner` 已按审计优先级（high → medium → low）排序，串行模式下自然先做高优先级；默认并行，`conventions.md` 配 `执行模式: 串行` 时改串行 |
+| 3 | 并行派发 | `interface-catalog` + N × `endpoint-analyst`（每接口一个）；按 `_plan.md` 顺序派发——`planner` 已按审计优先级（high → medium → low）排序，串行模式下自然先做高优先级；默认并行，`conventions.md` 配 `执行模式: 串行` 时改串行 |
 | 4 | 等待 + 失败重试 | 子代理失败重派最多 2 次；仍失败则在产物头部插入 `<!-- ⚠ 产物自检未通过：缺失 X 请人工补全 -->`，**不阻断** |
 | 5 | 派发 `aggregator-writer` | 传入粒度参数；产出 `features.md` / `features-{slug}.md` / `overview.md`；顶部带横向产物链接 |
 | 6 | 派发 `completion-verifier` | 写 `_audit.md`；**不阻断流程** |
-| 7 | 告知用户产物路径 | aggregator 入口 + 横向产物（`interfaces.md` / `outbound.md`）+ `_audit.md` |
+| 7 | 告知用户产物路径 | aggregator 入口 + 横向产物（`interfaces.md`）+ `_audit.md` |
 
 各子代理职责详见 `agents/README.md`，每个子代理的执行规范在 `agents/<name>.md` 自身 frontmatter prompt 内。opencode 用户复制 `agents/*.md` 到被分析项目的 `.opencode/agents/`；Claude Code 用户走 Task tool。
 
@@ -45,7 +45,6 @@ slug 小写连字符；中文转拼音/英文同义词；**默认覆盖同名文
 |---|---|---|
 | `_plan.md` | planner | 子任务计划 |
 | `interfaces.md` | interface-catalog | 对外暴露接口清单（inbound 攻击面） |
-| `outbound.md` | outbound-collector | 系统对外调用汇总（outbound） |
 | `endpoint-{METHOD}-{slug}.md` | endpoint-analyst | 单接口深度分析 |
 | `features.md` / `features-{slug}.md` / `overview.md` | aggregator-writer | 索引 aggregator |
 | `_audit.md` | completion-verifier | 任务完整性审计 |

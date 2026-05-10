@@ -1,6 +1,6 @@
 # biz-flow-recon 项目级子代理（opencode）
 
-6 份子代理定义，配合 opencode runtime 使用。**Claude Code 用户不需要这些文件**——内置 Task tool 由主 agent 直接派发等价子任务。
+5 份子代理定义，配合 opencode runtime 使用。**Claude Code 用户不需要这些文件**——内置 Task tool 由主 agent 直接派发等价子任务。
 
 ## 项目级 placement
 
@@ -19,7 +19,7 @@ ln -s <skill-pkg>/.opencode/agents                 <被分析项目>/.opencode/a
 <被分析项目>/
 └── .opencode/
     ├── skills/biz-flow-recon/    # 含 SKILL.md / templates/ / docs/
-    └── agents/                   # 6 份子代理 .md
+    └── agents/                   # 5 份子代理 .md
 ```
 
 **不要放到全局** `~/.config/opencode/agents/`——本套子代理仅服务 biz-flow-recon 工作流。
@@ -30,7 +30,6 @@ ln -s <skill-pkg>/.opencode/agents                 <被分析项目>/.opencode/a
 |---|---|---|---|
 | `planner.md` | 枚举入口、按子功能划分 | 步骤 2 | `output/_plan.md` |
 | `interface-catalog.md` | 系统对外暴露接口（inbound 攻击面） | 步骤 3 并行 | `output/interfaces.md` |
-| `outbound-collector.md` | 系统对外调用（outbound 全局视图） | 步骤 3 并行 | `output/outbound.md` |
 | `endpoint-analyst.md` | 单接口深度分析（每接口一实例） | 步骤 3 并行 | `output/endpoint-*.md` |
 | `aggregator-writer.md` | 索引 aggregator（不读 knowledge/） | 步骤 5 | `output/{features*.md,overview.md}` |
 | `completion-verifier.md` | 任务完整性审计 | 步骤 6 | `output/_audit.md` |

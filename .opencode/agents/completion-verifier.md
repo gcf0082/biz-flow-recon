@@ -24,7 +24,7 @@ permission:
 1. **_plan.md 对照**：列出 sub-task 期望产物 vs 实际产出 → 缺失项
 2. **endpoint-*.md schema**：每份核对（顶层标题 / 业务描述段 / 必画图条件满足时含 flowchart TD / 不含评判性禁词 / 警告注释统计）
 3. **aggregator 引用完整性**：features.md / overview.md 中链接是否都指向存在的 endpoint-*.md（无悬空）；endpoint-*.md 是否都被至少一个 aggregator 引用（无孤儿）
-4. **横向产物**：`interfaces.md` / `outbound.md` 是否存在（按 _plan 与代码事实判断是否应有）
+4. **横向产物**：`interfaces.md` 是否存在（按 _plan 与代码事实判断是否应有）
 5. **未能追溯的引用一致性**：各 endpoint-*.md 末尾节合并到 aggregator 的去重正确性
 
 写 `<cwd>/biz-flow-recon/output/_audit.md`：

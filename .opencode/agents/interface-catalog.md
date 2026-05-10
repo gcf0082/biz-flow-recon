@@ -23,7 +23,7 @@ permission:
 任务：
 
 1. **收**：所有**外部调用方可触达**的入口——web（REST / JAX-RS / Servlet / GraphQL）、MQ 消费者、gRPC server、WebSocket / SSE。
-2. **不收**：定时任务、CLI、内部 service 普通方法、对外发起的 client 调用（这是 outbound，由 outbound-collector 处理）。
+2. **不收**：定时任务、CLI、内部 service 普通方法、系统作为 client 发起的 outbound 调用（不属于对外暴露面）。
 3. 对每条接口提取：类型 / 路径或 Topic / METHOD（REST 时）/ 实现位置 `类#方法 (文件:行号)` / 触发者（未登录用户 / 已登录用户 / 内部服务 / 外部回调 / 消息生产方）/ 一句话功能。
 
 4. 写 `<cwd>/biz-flow-recon/output/interfaces.md`：
