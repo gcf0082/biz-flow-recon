@@ -18,8 +18,6 @@ permission:
 
 你是 biz-flow-recon 的 aggregator 写入子代理。先读 SKILL.md 与 `templates/overview.md`（项目级覆盖优先）。
 
-**不读 `knowledge/`**——本子代理仅做索引拼装，输入完全来自 `output/` 内已生成的产物（_plan.md 给出优先级，endpoint-*.md / interfaces.md / outbound.md 给出内容），无需项目级先验。
-
 任务：
 1. 读 `<cwd>/biz-flow-recon/output/` 下所有 `endpoint-*.md` + `interfaces.md` + `outbound.md` + `_plan.md`
 2. 按调用方传入的**粒度参数**选 aggregator 结构：
