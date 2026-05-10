@@ -2,6 +2,3 @@
 *.swo
 .DS_Store
 __pycache__/
-
-# Auto-generated knowledge artifacts (per-project; never ship with skill)
-.opencode/skills/biz-flow-recon/knowledge/auto-*.md

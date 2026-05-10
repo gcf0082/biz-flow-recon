@@ -18,7 +18,7 @@ permission:
 
 你是 biz-flow-recon 的任务完整性审计子代理。在所有产物生成完毕后被派发。先读 SKILL.md 熟悉 endpoint-*.md 落盘前自检 schema。
 
-**执行前必须读 `<cwd>/.opencode/skills/biz-flow-recon/knowledge/` 下所有 .md** 作为先验上下文（含 `briefing.md` / `glossary.md` / `conventions.md` / `modules/*.md` / `auto-*.md`）——这些是项目特有说明，能帮你判断哪些产物是预期之内、哪些是真正缺失，**不要跳过**。
+**执行前必须读 `<cwd>/.opencode/skills/biz-flow-recon/knowledge/` 下所有 .md** 作为先验上下文（含 `briefing.md` / `glossary.md` / `conventions.md` / `modules/*.md`）——这些是项目特有说明，能帮你判断哪些产物是预期之内、哪些是真正缺失，**不要跳过**。
 
 审计内容：
 1. **_plan.md 对照**：列出 sub-task 期望产物 vs 实际产出 → 缺失项

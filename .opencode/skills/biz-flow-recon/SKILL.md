@@ -5,7 +5,7 @@ description: 按安全测试视角解读前/后端代码仓库，输出业务流
 
 # biz-flow-recon
 
-面向安全测试人员说明代码行为。**主 agent 仅负责调度**——所有内容产出由 8 个子代理完成；本文档是主 agent 的说明书。各子代理的执行细节在 `agents/<name>.md` 自身的 prompt 中。
+面向安全测试人员说明代码行为。**主 agent 仅负责调度**——所有内容产出由 6 个子代理完成；本文档是主 agent 的说明书。各子代理的执行细节在 `agents/<name>.md` 自身的 prompt 中。
 
 ## 共享原则（全员适用）
 
@@ -13,7 +13,7 @@ description: 按安全测试视角解读前/后端代码仓库，输出业务流
 - **未能定位必须显式标注**：在产物里点名"未在工作区找到 X"，并加入末尾的 `## 未能追溯的引用` 节集中列出。**不得编造、不得遗漏、不得静默忽略**。
 - **不中断、不询问**：skill 一旦显式调用即全自动跑到底——不论项目规模、未追溯引用数量、解析歧义。错误按"显式标注 + 继续"处理，**绝不暂停等待用户输入**。用户事后可改 `_plan.md` / 删除产物文件重跑。
 - **每接口一个 subagent + 主 agent 仅调度**：每个接口由独立 subagent 完成；主 agent 不直接产出任何内容文件，仅写调度决策。
-- **强制读 knowledge/**：所有子代理执行前**必须**先读 `<cwd>/.opencode/skills/biz-flow-recon/knowledge/` 全量 .md（含 `briefing.md` / `glossary.md` / `conventions.md` / `modules/*.md` / `auto-*.md`）作为先验——这是项目特有说明的标准位，给项目结构、术语、约定、内部服务定位等关键线索。**子代理自行读，主 agent 不传内容**（避免上下文丢失）。
+- **强制读 knowledge/**：除 `aggregator-writer` 外的子代理执行前**必须**先读 `<cwd>/.opencode/skills/biz-flow-recon/knowledge/` 全量 .md（含 `briefing.md` / `glossary.md` / `conventions.md` / `modules/*.md`）作为先验——这是项目特有说明的标准位，给项目结构、术语、约定、内部服务定位等关键线索。**子代理自行读，主 agent 不传内容**（避免上下文丢失）。`aggregator-writer` 仅做索引拼装，不读 knowledge/。
 
 ## 取舍
 
@@ -33,7 +33,6 @@ description: 按安全测试视角解读前/后端代码仓库，输出业务流
 | 4 | 等待 + 失败重试 | 子代理失败重派最多 2 次；仍失败则在产物头部插入 `<!-- ⚠ 产物自检未通过：缺失 X 请人工补全 -->`，**不阻断** |
 | 5 | 派发 `aggregator-writer` | 传入粒度参数；产出 `features.md` / `features-{slug}.md` / `overview.md`；顶部带横向产物链接 |
 | 6 | 派发 `completion-verifier` | 写 `_audit.md`；**不阻断流程** |
-| 6.5 | 派发 `knowledge-extractor`（可关闭） | `conventions.md` 写 `知识库自我演化: 关闭` 时跳过 |
 | 7 | 告知用户产物路径 | aggregator 入口 + 横向产物（`interfaces.md` / `outbound.md`）+ `_audit.md` |
 
 各子代理职责详见 `agents/README.md`，每个子代理的执行规范在 `agents/<name>.md` 自身 frontmatter prompt 内。opencode 用户复制 `agents/*.md` 到被分析项目的 `.opencode/agents/`；Claude Code 用户走 Task tool。
@@ -50,7 +49,6 @@ slug 小写连字符；中文转拼音/英文同义词；**默认覆盖同名文
 | `endpoint-{METHOD}-{slug}.md` | endpoint-analyst | 单接口深度分析 |
 | `features.md` / `features-{slug}.md` / `overview.md` | aggregator-writer | 索引 aggregator |
 | `_audit.md` | completion-verifier | 任务完整性审计 |
-| `../knowledge/auto-*.md` | knowledge-extractor | 自动提取的先验（可关闭） |
 
 ## 工作目录与模板
 
