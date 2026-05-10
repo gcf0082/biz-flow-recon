@@ -29,7 +29,7 @@ description: 按安全测试视角解读前/后端代码仓库，输出业务流
 | 0 | 加载工作目录 | 读 `<cwd>/.opencode/skills/biz-flow-recon/knowledge/`（如有）；解析模板路径（项目级覆盖 → skill 默认）。**不写任何文件** |
 | 1 | 确定粒度 | A（整项目）/ B（默认子功能 + 接口）/ C（单接口） |
 | 2 | 派发 `planner` | 写 `_plan.md`；已存在则跳过 |
-| 3 | 并行派发 | `interface-catalog` + `outbound-collector` + N × `endpoint-analyst`（每接口一个）；默认并行，`conventions.md` 配 `执行模式: 串行` 时改串行 |
+| 3 | 并行派发 | `interface-catalog` + `outbound-collector` + N × `endpoint-analyst`（每接口一个）；按 `_plan.md` 顺序派发——`planner` 已按审计优先级（high → medium → low）排序，串行模式下自然先做高优先级；默认并行，`conventions.md` 配 `执行模式: 串行` 时改串行 |
 | 4 | 等待 + 失败重试 | 子代理失败重派最多 2 次；仍失败则在产物头部插入 `<!-- ⚠ 产物自检未通过：缺失 X 请人工补全 -->`，**不阻断** |
 | 5 | 派发 `aggregator-writer` | 传入粒度参数；产出 `features.md` / `features-{slug}.md` / `overview.md`；顶部带横向产物链接 |
 | 6 | 派发 `completion-verifier` | 写 `_audit.md`；**不阻断流程** |
