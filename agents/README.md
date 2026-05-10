@@ -1,6 +1,6 @@
 # biz-flow-recon 项目级子代理（opencode）
 
-8 份子代理定义，配合 opencode runtime 使用。**Claude Code 用户不需要这些文件**——内置 Task tool 由主 agent 直接派发等价子任务。
+7 份子代理定义，配合 opencode runtime 使用。**Claude Code 用户不需要这些文件**——内置 Task tool 由主 agent 直接派发等价子任务。
 
 ## 项目级 placement（重要）
 
@@ -21,7 +21,6 @@ cp <skill-pkg>/agents/*.md <被分析项目>/.opencode/agents/
 | `interface-catalog.md` | 系统对外暴露接口（inbound 攻击面） | 步骤 3 并行 | `output/interfaces.md` |
 | `outbound-collector.md` | 系统对外调用（outbound 全局视图） | 步骤 3 并行 | `output/outbound.md` |
 | `endpoint-analyst.md` | 单接口深度分析（每接口一实例） | 步骤 3 并行 | `output/endpoint-*.md` |
-| `cross-cut-analyst.md` | 跨接口横向洞察 | 步骤 4.5 | `output/cross-cuts.md` |
 | `aggregator-writer.md` | 索引 aggregator | 步骤 5 | `output/{features*.md,overview.md}` |
 | `completion-verifier.md` | 任务完整性审计 | 步骤 6 | `output/_audit.md` |
 | `knowledge-extractor.md` | 知识库自我演化（可关闭） | 步骤 6.5 | `knowledge/auto-*.md` |
@@ -40,5 +39,4 @@ cp <skill-pkg>/agents/*.md <被分析项目>/.opencode/agents/
 ## 多模型混用（opencode 独有）
 
 子代理 frontmatter 加 `model: <provider/model>` 可指定独立模型——例如让
-`endpoint-analyst` 用便宜模型并行扫描，`aggregator-writer` / `cross-cut-analyst`
-用 Opus 做深度归纳。
+`endpoint-analyst` 用便宜模型并行扫描，`aggregator-writer` 用 Opus 做归纳。

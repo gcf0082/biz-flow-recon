@@ -23,8 +23,8 @@ prompt: |
   3. **aggregator 引用完整性**：features.md / overview.md 中链接是否都
      指向存在的 endpoint-*.md（无悬空）；endpoint-*.md 是否都被至少一个
      aggregator 引用（无孤儿）
-  4. **横向产物**：`interfaces.md` / `outbound.md` / `cross-cuts.md` 是否
-     存在（按 _plan 与代码事实判断是否应有）
+  4. **横向产物**：`interfaces.md` / `outbound.md` 是否存在（按 _plan 与
+     代码事实判断是否应有）
   5. **未能追溯的引用一致性**：各 endpoint-*.md 末尾节合并到 aggregator 的
      去重正确性
 

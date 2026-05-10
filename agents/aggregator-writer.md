@@ -17,7 +17,7 @@ prompt: |
 
   任务：
   1. 读 `output/` 下所有 `endpoint-*.md` + `interfaces.md` + `outbound.md` +
-     `cross-cuts.md` + `_plan.md`
+     `_plan.md`
   2. 按调用方传入的**粒度参数**选 aggregator 结构：
      - C 单接口 → 不写 aggregator（产物即对应 endpoint-*.md）
      - B 限定 → `features-{slug}.md`：子功能一句话概述 + 范围内 endpoint-*.md 链接
@@ -25,7 +25,7 @@ prompt: |
        + 按子功能分组列接口链接
      - A 大型项目 → 每子功能一份 `features-{slug}.md` + 顶层 `overview.md`
   3. **顶部第一行**加横向产物链接：`[对外接口清单](interfaces.md)` ·
-     `[对外调用汇总](outbound.md)` · `[横向洞察](cross-cuts.md)`
+     `[对外调用汇总](outbound.md)`
   4. 末尾合并所有 endpoint-*.md 的 `## 未能追溯的引用` 节，去重后集中列出；
      无则整节略去
 
