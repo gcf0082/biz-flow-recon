@@ -38,6 +38,8 @@ ln -s <skill-pkg>/.opencode/agents                 <被分析项目>/.opencode/a
 
 主 agent 在 opencode 下**只负责调度**——不直接产出任何内容文件。
 
+**所有子代理执行前默认加载** `<被分析项目>/biz-flow-recon/knowledge/` 下全量 `.md`（含用户手填的 `briefing.md` / `glossary.md` / `conventions.md` / `modules/*.md` 与自动生成的 `auto-*.md`）作为项目级先验上下文。子代理自行读取，不依赖主 agent 转发。
+
 ## 关闭知识库自我演化
 
 `<被分析项目>/biz-flow-recon/knowledge/conventions.md` 写：
