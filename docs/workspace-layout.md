@@ -2,170 +2,103 @@
 
 biz-flow-recon 将"通用框架"与"项目专属信息"分离：
 
-- **skill 仓本身**：通用方法论与默认模板，置于 `templates/`。
-- **被分析项目内**：约定一个 `biz-flow-recon/` 子目录，存放该项目的知识库、模板覆盖与产物。skill 自动从此处加载。
+- **skill 仓本身**：通用方法论 + 默认模板 + 子代理定义模板（`agents/`）
+- **被分析项目内**：约定一个 `biz-flow-recon/` 子目录存放该项目的知识库、模板覆盖与产物；opencode runtime 还需要 `.opencode/agents/` 目录
 
 ## 目录结构
 
-在被分析项目根目录下创建：
+被分析项目根目录下：
 
 ```
 <被分析项目>/
-└── biz-flow-recon/
-    ├── knowledge/                 # 可选：项目专属知识库
-    │   ├── glossary.md            # 术语、模块名、角色名
-    │   ├── conventions.md         # 团队约定（鉴权方式、加密库、日志规范、命名）
-    │   └── modules/               # 按子模块的预先说明
-    │       └── order-service.md
-    ├── templates/                 # 可选：覆盖默认模板
-    │   ├── default.md             # 单接口产物 endpoint-*.md 的格式
-    │   ├── overview.md            # aggregator 索引格式
-    │   └── _plan.md               # 子任务计划
-    ├── .opencode/                 # 可选（仅 opencode runtime 使用）
-    │   └── agents/                # 项目级子代理定义（从 skill 包的 agents/ 复制；共 8 份）
-    │       ├── planner.md
-    │       ├── interface-catalog.md
-    │       ├── outbound-collector.md
-    │       ├── endpoint-analyst.md
-    │       ├── cross-cut-analyst.md
-    │       ├── aggregator-writer.md
-    │       ├── completion-verifier.md
-    │       └── knowledge-extractor.md
-    └── output/                    # skill 自动写入产物
-        ├── _plan.md               # 子任务计划（planner 写入）
-        ├── interfaces.md          # 对外暴露接口（interface-catalog 写入）
-        ├── outbound.md            # 系统对外调用汇总（outbound-collector 写入）
-        ├── endpoint-*.md          # 每接口一份（endpoint-analyst 写入）
-        ├── cross-cuts.md          # 横向洞察（cross-cut-analyst 写入）
-        ├── features.md / features-{slug}.md   # aggregator 索引（aggregator-writer 写入）
-        ├── overview.md            # 整项目顶层索引（aggregator-writer 写入）
-        └── _audit.md              # 任务完整性审计报告（completion-verifier 写入）
+├── biz-flow-recon/
+│   ├── knowledge/                # 可选：项目专属知识库
+│   │   ├── glossary.md           # 用户手填：术语
+│   │   ├── conventions.md        # 用户手填：团队约定 + 配置开关
+│   │   ├── modules/*.md          # 用户手填：子模块说明
+│   │   └── auto-*.md             # 自动提取（knowledge-extractor 写入）
+│   ├── templates/                # 可选：覆盖 skill 默认模板
+│   │   ├── default.md
+│   │   ├── overview.md
+│   │   └── _plan.md
+│   └── output/                   # skill 自动写入产物
+│       ├── _plan.md / interfaces.md / outbound.md
+│       ├── endpoint-*.md
+│       ├── cross-cuts.md
+│       ├── features*.md / overview.md
+│       └── _audit.md
+└── .opencode/agents/             # 可选（仅 opencode runtime）
+    └── *.md                      # 8 份子代理定义，从 skill 包 agents/ 复制
 ```
 
-`biz-flow-recon/` 这一目录名为**固定约定**，skill 在当前工作目录下查找。
+`biz-flow-recon/` 与 `.opencode/agents/` 目录名为**固定约定**。
 
 ## 知识库（knowledge/）
 
-skill 在分析开始前会**完整读取本目录下所有 .md 文件**作为先验。建议存放：
+skill 在分析开始前**完整读取本目录所有 .md** 作为先验。建议存放：
 
-- **术语表**（`glossary.md`）：项目特有名词。例如 `BizContext = 会话上下文，跨 RPC 调用透传`、`AcmeCrypto = 内部加密 SDK，封装 AES-GCM`。
-- **团队约定**（`conventions.md`）：统一鉴权方式、密钥获取方式、敏感字段加密所用库、日志位置、配置文件命名等。**亦可在此声明：内部服务代码位置、递归追溯深度**——详见下文"递归追溯配置"。
-- **模块说明**（`modules/*.md`）：每个子模块一份文件，说明其功能与协作对象。
-- **自动提取**（`auto-*.md`）：由 `knowledge-extractor` 子代理在每次运行结束时自动写入——包括 `auto-glossary.md` / `auto-internal-services.md` / `auto-conventions.md` 等。这些与用户手填文件**并存且不覆盖**——用户可 review 后手动合并到正式文件，或保留 auto- 版本。
+- **`glossary.md`**：项目特有术语
+- **`conventions.md`**：团队约定（鉴权方式、加密库、日志规范）+ skill 行为开关（见下）
+- **`modules/*.md`**：每个子模块一份说明
+- **`auto-*.md`**：`knowledge-extractor` 自动写入；与上述用户文件**并存且不覆盖**
 
-内容**应保持精炼**——此为 Claude 的先验提示，而非用户文档；冗余信息会反向降低准确度。
+内容**应保持精炼**——这是给 Claude 的先验提示，冗余反而降低准确度。
 
-### 递归追溯配置（写入 `conventions.md`）
-
-skill 在遇到调用脚本 / 内部服务 / SQL / 反射时会尝试**在工作区内定位目标并读取**，将下游行为一并纳入同一描述。两项配置可调整该行为：
-
-**内部服务定位**（启用跨仓追溯）：
+## conventions.md 配置开关
 
 ```markdown
 ## 内部服务定位
 - charge-svc → 代码在 ../services/charge-svc/
-- idp-svc    → 代码在 ../services/idp-svc/
-- billing    → 黑盒（独立外部团队维护，不予追溯）
-```
+- billing    → 黑盒（外部团队维护）
 
-skill 在调用 `http://charge-svc/...` 时即按指明路径定位接收端代码。标注为黑盒的服务按外部处理，不递归。
-
-**递归深度**（默认 2 层，按需调整）：
-
-```markdown
 ## 递归追溯深度
 3
-```
 
-填写一个整数。深度增大会使产物增长，按需配置。
+## 执行模式
+并行
 
-**关闭知识库自我演化**（默认开启 → `knowledge-extractor` 在步骤 6.5 自动派发）：
-
-```markdown
 ## 知识库自我演化
 关闭
 ```
 
-写入此声明后，主 agent 跳过 `knowledge-extractor` 派发；`knowledge/auto-*.md` 不会被生成或更新。
-
-未能定位的目标 skill 将**在产物末尾的"未能追溯的引用"节中显式列出**，便于逐项核查（属真正外部 / 未拉取仓 / 路径配置错误）。
+skill 见到调用 `http://charge-svc/...` 即按指定路径定位接收端代码；标注黑盒的按外部处理。深度默认 2，可调。执行模式默认并行，可改串行（更稳但慢）。"知识库自我演化: 关闭"则跳过步骤 6.5。
 
 ## 模板覆盖（templates/）
 
-若默认模板的格式不符合团队偏好，将 skill 包内 `templates/` 下对应文件复制至项目 `biz-flow-recon/templates/` 后修改即可。skill 检测到项目内同名文件即优先使用，否则回退至 skill 默认。
+将 skill 包 `templates/` 下对应文件复制到项目 `biz-flow-recon/templates/` 后修改。skill 检测到项目内同名文件即优先使用。
 
-支持的文件名：`default.md`、`overview.md`、`_plan.md`。粒度 C（单接口）同样走 `default.md`（仅截取单个接口块）。
+支持的文件名：`default.md`、`overview.md`、`_plan.md`。粒度 C（单接口）也走 `default.md`（仅截取单接口块）。
 
 ## 输出（output/）
 
-skill 产物结构为**每接口一份独立文件 + 横向汇总文件 + aggregator 索引 + 审计报告**：
+产物结构 = 每接口一份独立文件 + 三个横向产物（`interfaces.md` / `outbound.md` / `cross-cuts.md`）+ aggregator 索引 + `_audit.md`。
 
-```
-biz-flow-recon/output/
-├── _plan.md                                子任务计划（planner 写入）
-├── interfaces.md                           对外接口清单（interface-catalog 写入，攻击面索引）
-├── endpoint-GET-api-files-name.md          每接口一份（endpoint-analyst 写入）
-├── endpoint-POST-api-jobs-run-report.md
-├── endpoint-GET-api-users-me.md
-├── ...
-├── features.md                             aggregator 索引（小型项目）
-├── overview.md                             aggregator 索引（粒度 A 或大型项目顶层）
-└── _audit.md                               任务完整性审计报告（completion-verifier 写入）
-```
+每份产物由对应**子代理**独立完成（默认并行）；**主 agent 全程仅调度，不直接产出任何内容文件**。aggregator 仅列概述与链接，**不重复接口正文**。
 
-每份产物由对应**子代理**独立完成（默认并行）。**主 agent 全程仅调度，不直接产出任何内容文件**——任何内容产出都是某个子代理的责任。aggregator 仅列概述与链接，**不重复接口正文**。
-
-| 场景 | 产物 |
+| 场景 | aggregator 产物 |
 |---|---|
-| 单接口（粒度 C） | 一份 `endpoint-{METHOD}-{slug}.md`，无 aggregator |
-| 默认（粒度 B 全量）/ 整项目小型项目 | 多份 `endpoint-*.md` + `features.md` 或 `overview.md` 索引 |
-| 限定范围（如"支付下单"） | 多份 `endpoint-*.md` + `features-{slug}.md` 索引 |
-| 整项目大型项目 | 多份 `endpoint-*.md` + 每子功能一份 `features-{slug}.md` + 顶层 `overview.md` |
+| 单接口（粒度 C） | 仅 `endpoint-{METHOD}-{slug}.md` |
+| 默认（粒度 B 全量）/ A 小型项目 | `features.md` 或 `overview.md` |
+| 限定范围（如"支付下单"） | `features-{slug}.md` |
+| A 大型项目 | 每子功能一份 `features-{slug}.md` + 顶层 `overview.md` |
 
-默认**覆盖同名文件**便于 git diff；如需保留快照请自行改名或使用 git。
+默认覆盖同名文件便于 git diff。
 
 ## 增量重跑 / 中断恢复
 
-- **跳过已完成项**：skill 检测到 `endpoint-X.md` 已存在即予以跳过，仅补做缺失项——避免重复消耗 token
+- **跳过已完成项**：检测到 `endpoint-X.md` 等已存在即跳过
 - **重做单个接口**：删除对应 `endpoint-X.md` 后重新执行
-- **完全重做**：删除整个 `output/`，或明确告知 skill"全部重做"
-- **调整拆分（大型项目）**：直接编辑 `_plan.md` 后让 skill 继续执行
-
-## 执行模式
-
-默认**并行**派发各接口 subagent——执行迅速、彼此独立。代价为 token 消耗较高（每个 subagent 持有独立 context）。可在 `knowledge/conventions.md` 切换为串行：
-
-```
-## 执行模式
-串行
-```
+- **完全重做**：删除整个 `output/`
+- **调整拆分**：直接编辑 `_plan.md` 后让 skill 继续执行
 
 ## Runtime 兼容性
 
-skill 同时支持 **Claude Code** 和 **opencode**：
-
-- **Claude Code**：内置 Task tool 直接派发等价子任务——**无需** `.opencode/agents/` 目录。
-- **opencode**：把 skill 包内 `agents/` 下的 5 份子代理定义（`planner.md` / `interface-catalog.md` / `endpoint-analyst.md` / `aggregator-writer.md` / `completion-verifier.md`）复制到**被分析项目**的 `.opencode/agents/`：
-
-  ```bash
-  mkdir -p .opencode/agents
-  cp <skill-pkg>/agents/*.md .opencode/agents/
-  ```
-
-  **不要放到全局** `~/.config/opencode/agents/`——这些子代理只服务于 biz-flow-recon 工作流，全局可见会污染其他项目。
-
-opencode 用户可在子代理 frontmatter 加 `model: <provider/model>` 指定不同模型混用——例如 endpoint-analyst 用便宜模型并行扫描，aggregator-writer 用 Opus 做汇总。
+- **Claude Code**：内置 Task tool 直接派发——**无需** `.opencode/agents/`
+- **opencode**：复制 `<skill-pkg>/agents/*.md` 到 `<被分析项目>/.opencode/agents/`（**项目级，不入全局**）。子代理 frontmatter 加 `model:` 可指定不同 provider/model，混用便宜模型并行扫描 + Opus 深度归纳
 
 ## 建议的 gitignore 配置
 
-`biz-flow-recon/output/` 通常包含项目内部信息，**建议不提交至公开仓库**。在被分析项目的 `.gitignore` 中添加：
-
 ```
 biz-flow-recon/output/
-```
-
-若 `knowledge/` 亦含敏感信息，可一并忽略：
-
-```
-biz-flow-recon/knowledge/
+biz-flow-recon/knowledge/        # 含敏感信息时按需忽略
 ```
