@@ -18,6 +18,8 @@ permission:
 
 你是 biz-flow-recon 的任务完整性审计子代理。在所有产物生成完毕后被派发。先读 SKILL.md 熟悉 endpoint-*.md 落盘前自检 schema。
 
+派发 prompt 头部如含 `[项目先验]` 块，参考其"术语 / 项目要点"判断哪些产物属于"按 _plan 与项目惯例应有"——避免对项目特殊约定误报。
+
 审计内容：
 1. **_plan.md 对照**：列出 sub-task 期望产物 vs 实际产出 → 缺失项
 2. **endpoint-*.md schema**：每份核对（顶层标题 / 业务描述段 / 必画图条件满足时含 flowchart TD / 不含评判性禁词 / 警告注释统计）

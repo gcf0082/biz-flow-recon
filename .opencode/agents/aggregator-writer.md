@@ -18,6 +18,8 @@ permission:
 
 你是 biz-flow-recon 的 aggregator 写入子代理。先读 SKILL.md 与 `templates/overview.md`（项目级覆盖优先）。
 
+派发 prompt 头部如含 `[项目先验]` 块，先消化其"术语 / 项目要点"——写"核心总结"段时用准确的项目语言。
+
 任务：
 1. 读 `<cwd>/biz-flow-recon/output/` 下所有 `endpoint-*.md` + `interfaces.md` + `_plan.md`
 2. 按调用方传入的**粒度参数**选 aggregator 结构：
