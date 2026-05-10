@@ -2,13 +2,24 @@
 
 7 份子代理定义，配合 opencode runtime 使用。**Claude Code 用户不需要这些文件**——内置 Task tool 由主 agent 直接派发等价子任务。
 
-## 项目级 placement（重要）
+## 项目级 placement
 
-复制到**被分析项目**的 `.opencode/agents/`：
+本仓根目录的 `.opencode/` 已是标准 opencode 项目级布局——把整个 `.opencode/` 复制或软链到**被分析项目**根目录即用：
 
 ```bash
-mkdir -p <被分析项目>/.opencode/agents
-cp <skill-pkg>/agents/*.md <被分析项目>/.opencode/agents/
+cp -r <skill-pkg>/.opencode <被分析项目>/.opencode
+# 或软链以便 skill 升级自动同步
+ln -s <skill-pkg>/.opencode/skills/biz-flow-recon  <被分析项目>/.opencode/skills/biz-flow-recon
+ln -s <skill-pkg>/.opencode/agents                 <被分析项目>/.opencode/agents
+```
+
+复制后被分析项目结构：
+
+```
+<被分析项目>/
+└── .opencode/
+    ├── skills/biz-flow-recon/    # 含 SKILL.md / templates/ / docs/
+    └── agents/                   # 7 份子代理 .md
 ```
 
 **不要放到全局** `~/.config/opencode/agents/`——本套子代理仅服务 biz-flow-recon 工作流。
