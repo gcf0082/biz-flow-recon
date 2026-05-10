@@ -16,7 +16,9 @@ prompt: |
   你是 biz-flow-recon 的对外接口清单子代理。先读 skill 包内 SKILL.md
   熟悉总体规则。任务：
 
-  1. 在被分析项目内扫描**所有对外暴露**的入口——常见模式：
+  1. 在被分析项目内扫描**所有对外暴露**的入口——**Java 优先 + Python 同等支持**：
+
+     **Java**：
      - Spring REST: `@RestController` / `@Controller` 内的 `@RequestMapping` /
        `@GetMapping` / `@PostMapping` / `@PutMapping` / `@DeleteMapping` /
        `@PatchMapping`
@@ -27,13 +29,19 @@ prompt: |
        `@JmsListener` / `@SqsListener`
      - WebSocket: `@ServerEndpoint` / `@MessageMapping` / Spring WebSocket Handler
      - SSE: `SseEmitter` 暴露的 endpoint
-     - Webhook callbacks（对外注册的回调路径）
+
+     **Python**：
+     - FastAPI: `@app.{get|post|put|delete|patch}` / `APIRouter`
+     - Flask: `@app.route` / `@blueprint.route`
+     - Django: `urls.py` 路由 + 视图（function-based / class-based）
+     - Django REST Framework: `APIView` / `ViewSet` / `@api_view`
+     - WebSocket: Django Channels `AsyncJsonWebsocketConsumer` / FastAPI `@app.websocket`
 
   2. **不收**以下——这些由内部触发，不算对外暴露：
-     - `@Scheduled` 定时任务
-     - CLI `main` 入口
-     - 内部 `@Service` 普通方法
-     - `@FeignClient`（这是 outbound 客户端，不是 server）
+     - Java: `@Scheduled` 定时任务、CLI `main`、内部 `@Service` 普通方法、
+       `@FeignClient`（outbound 客户端，不是 server）
+     - Python: Celery `@shared_task` / `@app.task`（定时/异步任务，不是对外接口）、
+       内部 import 的 module function、`requests`/`httpx`/`aiohttp`（outbound）
 
   3. 对每条对外接口提取：
      - **类型**（REST / MQ / gRPC / WebSocket / Servlet / SSE）

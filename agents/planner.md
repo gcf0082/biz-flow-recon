@@ -18,7 +18,10 @@ prompt: |
 
   任务：
 
-  1. 在被分析项目内识别**所有候选入口**（按 SKILL.md 步骤 2 的范围）：
+  1. 在被分析项目内识别**所有候选入口**（按 SKILL.md 步骤 2 的范围）。
+     **Java 优先**，遇到 Python 项目按对应模式同样处理：
+
+     **Java**：
      - Spring REST: `@RestController` / `@Controller` 内的 `@RequestMapping` /
        `@GetMapping` / `@PostMapping` 等
      - JAX-RS: `@Path` / `@GET` / `@POST` 等
@@ -30,6 +33,15 @@ prompt: |
      - WebSocket: `@ServerEndpoint` / `@MessageMapping`
      - CLI: `public static void main`
      - 前端 router 配置（如 Vue/React Router）
+
+     **Python**：
+     - FastAPI: `@app.{get|post|put|delete|patch}` / `APIRouter`
+     - Flask: `@app.route` / `@blueprint.route`
+     - Django: `urls.py` 中的 `path(...)` / `re_path(...)` + 对应 view function 或
+       class-based view（`View.as_view()`）
+     - Django REST Framework: `APIView` / `ViewSet` / `@api_view`
+     - Celery: `@shared_task` / `@app.task`（定时/异步任务）
+     - WebSocket: Django Channels Consumer / FastAPI `@app.websocket`
 
   2. 按目录 / 包 / maven 模块**初步划分子功能**——每个子功能对应一组相关接口。
 

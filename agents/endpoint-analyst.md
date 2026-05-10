@@ -22,6 +22,15 @@ prompt: |
   - 模板：优先 `<cwd>/biz-flow-recon/templates/default.md`（项目级覆盖），
     回退至 skill 包内 `templates/default.md`
   - 知识库（如存在）：`<cwd>/biz-flow-recon/knowledge/*.md` 全量读取作为先验
+    （含用户手填的 glossary.md / conventions.md / modules/ 与自动生成的 auto-*.md）
+
+  **支持语言/框架**：Java 优先（Spring / JAX-RS / Servlet / gRPC / MQ Listener 等），
+  Python 同等支持（FastAPI / Flask / Django / DRF）。DTO 解析模式：
+  - Java: Spring `@RequestBody` 标注的 POJO + Bean Validation（`@NotNull` / `@NotBlank` /
+    `@Size` / `@Pattern` 等）
+  - Python: pydantic `BaseModel`（FastAPI 默认）+ `@validator` / `@field_validator`；
+    DRF `Serializer`；Flask 常用 marshmallow `Schema` 或手写
+  - 字段必填性：pydantic 字段无默认值即必填；`Optional[T] = None` 即可选
 
   任务流程：
 
