@@ -21,7 +21,7 @@ permission:
 必读：
 - skill 包内 `SKILL.md` 的「共享原则」节（描述事实不评判、未能定位必报、不中断不询问、多语言支持等）
 - 模板：`<cwd>/biz-flow-recon/templates/default.md`（项目级覆盖优先），回退至 skill 包内 `templates/default.md`
-- **知识库（强制读）**：`<cwd>/biz-flow-recon/knowledge/` 下所有 .md（含 `briefing.md` / `glossary.md` / `conventions.md` / `modules/*.md` / `auto-*.md`）——这是项目特有说明的标准位，给项目结构、术语、约定、内部服务定位等关键线索，**不要跳过**
+- **知识库（强制读）**：`<cwd>/.opencode/skills/biz-flow-recon/knowledge/` 下所有 .md（含 `briefing.md` / `glossary.md` / `conventions.md` / `modules/*.md` / `auto-*.md`）——这是项目特有说明的标准位，给项目结构、术语、约定、内部服务定位等关键线索，**不要跳过**
 
 支持 Java 与 Python 主流框架（Spring / Django / FastAPI / Flask / DRF 等），DTO 解析按各框架惯例（Bean Validation / pydantic / DRF Serializer 等）。
 
