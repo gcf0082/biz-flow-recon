@@ -23,11 +23,11 @@ features.md）使用——单接口产物文件不包含此类外层包装。
 
 ```mermaid
 flowchart TD
-    IN["body.filename（用户输入）<br/><small>UploadController.java:48</small>"] --> CHECK_EXT
+    ENDPOINT["POST /api/files/upload<br/>multipart: file + filename<br/><small>UploadController.java:48</small>"] --> CHECK_EXT
 
     subgraph 前置校验
-        CHECK_EXT{"① 校验文件后缀<br/>是否在 .pdf / .docx / .jpg / .png 内？<br/><small>UploadController.java:41</small>"}
-        CHECK_SIZE{"② 校验文件大小<br/>是否 ≤ 50 MB？<br/><small>application.yml:67</small>"}
+        CHECK_EXT{"① 校验 body.filename 后缀<br/>是否在 .pdf / .docx / .jpg / .png 内？<br/><small>UploadController.java:41</small>"}
+        CHECK_SIZE{"② 校验 file 大小<br/>是否 ≤ 50 MB？<br/><small>application.yml:67</small>"}
     end
 
     subgraph 异常终止
@@ -36,10 +36,10 @@ flowchart TD
     end
 
     subgraph 核心处理
-        WRITE["③ 落地原始文件<br/>写 /data/uploads/{filename}<br/><small>UploadController.java:62</small>"]
-        SCAN["④ 触发内容扫描<br/>ProcessBuilder bash scripts/scan.sh /data/uploads/{filename}<br/><small>UploadController.java:71</small>"]
-        ARCHIVE["⑤ 归档扫描结果<br/>写 /data/scan-results/{filename}.json<br/><small>UploadController.java:84</small>"]
-        REPORT["⑥ 上报到监控<br/>POST https://monitor.internal/scan-events<br/><small>MonitorClient.java:33</small>"]
+        WRITE["③ 落地原始文件<br/>写 /data/uploads/{body.filename}<br/><small>UploadController.java:62</small>"]
+        SCAN["④ 触发内容扫描<br/>ProcessBuilder bash scripts/scan.sh /data/uploads/{body.filename}<br/><small>UploadController.java:71</small>"]
+        ARCHIVE["⑤ 归档扫描结果<br/>写 /data/scan-results/{body.filename}.json<br/><small>UploadController.java:84</small>"]
+        REPORT["⑥ 上报到监控<br/>POST https://monitor.internal/scan-events · 硬编码<br/><small>MonitorClient.java:33</small>"]
     end
 
     CHECK_EXT -->|否| REJECT_EXT
@@ -50,7 +50,7 @@ flowchart TD
     SCAN --> ARCHIVE
     ARCHIVE --> REPORT
 
-    style IN fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
+    style ENDPOINT fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
     style CHECK_EXT fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
     style CHECK_SIZE fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
     style REJECT_EXT fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
