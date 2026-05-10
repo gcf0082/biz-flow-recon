@@ -66,8 +66,6 @@ flowchart TD
     style REPORT fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
 ```
 
-- **请求**：multipart/form-data，含 `file`（binary，原始内容）+ form 字段 `filename` (string!)。DTO: 无（直接 `@RequestParam`，UploadController.java:48）
-
 ## 未能追溯的引用
 
 仅在存在未能定位的下游目标时撰写本节，按 `<引用> — 调用点 (文件:行号)` 一条一行；无则**略去整节**。
