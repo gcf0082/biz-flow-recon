@@ -11,11 +11,10 @@ features.md）使用——单接口产物文件不包含此类外层包装。
 请求体字段树）。起点节点统一用 `START([开始])`，接口 URL / 请求维度由标题与
 `**请求**` 行承载。
 
-观测点（审计标记）：命中 A/B/C/D 任一类的图节点 `<small>` 行末追加 `🔍 (X)`，
-节点 `style` 按观测优先级配色——高（红 #FCE4E4 / #C0392B）/ 中（橙 #FDF2E0 /
-#D68910）/ 低（浅黄 #FEF9E7 / #B7950B）；未命中节点保持默认蓝灰 #E8EEF2 /
-#5B7B94。下例中 ③/④/⑤/⑥ 均高观测优先级（用户输入直接拼到敏感槽 + TLS 校验
-关闭 + 内部 host 硬编码）。
+观测点（审计标记）：审计人定向观测的图节点用配色提示观测优先级——高（红
+#FCE4E4 / #C0392B）/ 中（橙 #FDF2E0 / #D68910）/ 低（浅黄 #FEF9E7 / #B7950B）；
+非观测点保持默认蓝灰 #E8EEF2 / #5B7B94。下例 ③/④/⑤/⑥ 均高观测优先级（用户
+输入直接拼到敏感槽 + TLS 校验关闭 + 内部 host 硬编码）。
 -->
 
 # {范围名} 业务流讲解
@@ -47,10 +46,10 @@ flowchart TD
     end
 
     subgraph 核心处理
-        WRITE["③ 落地原始文件<br/>写 /data/uploads/{body.filename}<br/>—— body.filename 拼接到路径<br/><small>UploadController.java:62 🔍 (A)</small>"]
-        SCAN["④ 触发内容扫描<br/>ProcessBuilder bash scripts/scan.sh /data/uploads/{body.filename}<br/>—— body.filename 拼接到命令；scripts/scan.sh · 硬编码<br/><small>UploadController.java:71 · 关键控制点（配置） 🔍 (A)</small>"]
-        ARCHIVE["⑤ 归档扫描结果<br/>写 /data/scan-results/{body.filename}.json<br/>—— body.filename 拼接到路径<br/><small>UploadController.java:84 🔍 (A)</small>"]
-        REPORT["⑥ 上报到监控<br/>POST https://monitor.internal/scan-events · 硬编码<br/>OkHttp · TLS 校验关闭（trustAll X509TrustManager + HostnameVerifier 恒真）<br/><small>MonitorClient.java:33 · 关键控制点（开关） 🔍 (C,D)</small>"]
+        WRITE["③ 落地原始文件<br/>写 /data/uploads/{body.filename}<br/>—— body.filename 拼接到路径<br/><small>UploadController.java:62</small>"]
+        SCAN["④ 触发内容扫描<br/>ProcessBuilder bash scripts/scan.sh /data/uploads/{body.filename}<br/>—— body.filename 拼接到命令；scripts/scan.sh · 硬编码<br/><small>UploadController.java:71 · 关键控制点（配置）</small>"]
+        ARCHIVE["⑤ 归档扫描结果<br/>写 /data/scan-results/{body.filename}.json<br/>—— body.filename 拼接到路径<br/><small>UploadController.java:84</small>"]
+        REPORT["⑥ 上报到监控<br/>POST https://monitor.internal/scan-events · 硬编码<br/>OkHttp · TLS 校验关闭（trustAll X509TrustManager + HostnameVerifier 恒真）<br/><small>MonitorClient.java:33 · 关键控制点（开关）</small>"]
     end
 
     CHECK_EXT -->|否| REJECT_EXT
