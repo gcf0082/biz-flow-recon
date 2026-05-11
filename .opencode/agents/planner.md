@@ -29,9 +29,9 @@ permission:
    - **low**：纯只读 GET / health / metric / config 查询 / 元数据返回
    
    子功能整体的 priority 取其内部 endpoint 最高一档。
-4. 写出 `<cwd>/biz-flow-recon/output/_plan.md`（参考 `templates/_plan.md` 的 YAML 结构），**按 priority 高→中→低排序**子功能与其下 endpoints；每个 sub-task 含 name / slug / priority / scope（目录列表）/ endpoints（含 method / path_or_topic / class_method / file:line / expected_output / priority）。文件顶部加 HTML 注释说明：审计优先级是启发式分流 hint，不是风险结论。
+4. 写出 `<cwd>/_results/_plan.md`（参考 `templates/_plan.md` 的 YAML 结构），**按 priority 高→中→低排序**子功能与其下 endpoints；每个 sub-task 含 name / slug / priority / scope（目录列表）/ endpoints（含 method / path_or_topic / class_method / file:line / expected_output / priority）。文件顶部加 HTML 注释说明：审计优先级是启发式分流 hint，不是风险结论。
 
-**输出路径约束**：仅写入 `<cwd>/biz-flow-recon/output/_plan.md`——不写其他位置。
+**输出路径约束**：仅写入 `<cwd>/_results/_plan.md`——不写其他位置。
 
 原则：
 - 仅枚举、分组与优先级标注，**不做接口深度分析**——深度由 endpoint-analyst 负责

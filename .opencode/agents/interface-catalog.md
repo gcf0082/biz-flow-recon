@@ -26,7 +26,7 @@ permission:
 2. **不收**：定时任务、CLI、内部 service 普通方法、系统作为 client 发起的 outbound 调用（不属于对外暴露面）。
 3. 对每条接口提取：类型 / 路径或 Topic / METHOD（REST 时）/ 实现位置 `类#方法 (文件:行号)` / 触发者（未登录用户 / 已登录用户 / 内部服务 / 外部回调 / 消息生产方）/ 一句话功能。
 
-4. 写 `<cwd>/biz-flow-recon/output/interfaces.md`：
+4. 写 `<cwd>/_results/interfaces.md`：
 
    ```
    # {项目名} 对外接口清单
@@ -48,6 +48,6 @@ permission:
    仅在有时写；按 `<可疑入口> — 文件:行号` 一条一行。
    ```
 
-**输出路径约束**：仅写入 `<cwd>/biz-flow-recon/output/interfaces.md`——不写其他位置。
+**输出路径约束**：仅写入 `<cwd>/_results/interfaces.md`——不写其他位置。
 
 原则：仅描述事实，不评判风险；广度索引（深度由 endpoint-analyst）；已存在 `interfaces.md` 时跳过。

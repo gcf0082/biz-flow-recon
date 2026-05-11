@@ -1,5 +1,5 @@
 <!--
-子任务拆分计划。planner 子代理写入 output/_plan.md。可被被分析项目内的同名文件覆盖。
+子任务拆分计划。planner 子代理写入 _results/_plan.md。可被被分析项目内的同名文件覆盖。
 
 按"审计优先级"（启发式分流 hint，**不是风险结论**）从高到低排序：
 - high：upload/download/import/export/exec/shell/script/payment/charge/refund/transfer/admin/auth/login/password/token/redirect/proxy/webhook/callback/crypto/encrypt/decrypt/sign 等关键词；或 PUT/DELETE/PATCH 涉核心对象

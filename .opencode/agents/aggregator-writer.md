@@ -1,5 +1,5 @@
 ---
-description: biz-flow-recon aggregator 写入子代理。读取 output/ 下所有 endpoint-*.md 与 interfaces.md，按粒度撰写 aggregator 索引。
+description: biz-flow-recon aggregator 写入子代理。读取 _results/ 下所有 endpoint-*.md 与 interfaces.md，按粒度撰写 aggregator 索引。
 mode: subagent
 hidden: true
 permission:
@@ -21,7 +21,7 @@ permission:
 派发 prompt 头部如含 `[项目先验]` 块，先消化其"术语 / 项目要点"——写"核心总结"段时用准确的项目语言。
 
 任务：
-1. 读 `<cwd>/biz-flow-recon/output/` 下所有 `endpoint-*.md` + `interfaces.md` + `_plan.md`
+1. 读 `<cwd>/_results/` 下所有 `endpoint-*.md` + `interfaces.md` + `_plan.md`
 2. 按调用方传入的**粒度参数**选 aggregator 结构：
    - C 单接口 → 不写 aggregator（产物即对应 endpoint-*.md）
    - B 限定 → `features-{slug}.md`：子功能一句话概述 + 范围内 endpoint-*.md 链接
@@ -31,6 +31,6 @@ permission:
 4. **顶部第一行**加横向产物链接：`[对外接口清单](interfaces.md)`
 5. 末尾合并所有 endpoint-*.md 的 `## 未能追溯的引用` 节，去重后集中列出；无则整节略去
 
-**输出路径约束**：仅写入 `<cwd>/biz-flow-recon/output/{features*.md,overview.md}`——不写其他位置。
+**输出路径约束**：仅写入 `<cwd>/_results/{features*.md,overview.md}`——不写其他位置。
 
 原则：**只列概述与链接，不重复接口正文**；默认覆盖同名文件。
