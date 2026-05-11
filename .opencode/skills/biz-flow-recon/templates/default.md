@@ -11,6 +11,10 @@ features.md）使用——单接口产物文件不包含此类外层包装。
 请求体字段树）。起点节点统一用 `START([开始])`，接口 URL / 请求维度由标题与
 `**请求**` 行承载。
 
+文件 I/O / 命令 / 外呼 / SQL 节点**必须**写出目标本身（文件系统路径 / 完整命令行 /
+URL with method / 表名），禁止只写"执行脚本 / 调网关 / 写入文件 / 上报监控"等抽象表述；
+动态片段用 `{变量名}` 标注并指明来源。详见 SKILL.md「文件操作目标路径必报」条款。
+
 观测点（审计标记）：审计人定向观测的图节点用配色提示观测优先级——高（红
 #FCE4E4 / #C0392B）/ 中（橙 #FDF2E0 / #D68910）/ 低（浅黄 #FEF9E7 / #B7950B）；
 非观测点保持默认蓝灰 #E8EEF2 / #5B7B94。下例 ③/④/⑤/⑥ 均高观测优先级（用户
@@ -73,6 +77,7 @@ flowchart TD
 
 ## 未能追溯的引用
 
-仅在存在未能定位的下游目标时撰写本节，按 `<引用> — 调用点 (文件:行号)` 一条一行；无则**略去整节**。
+仅在存在未能定位的下游目标时撰写本节，按 `<引用> — 调用点 (文件:行号)` 一条一行；无则**略去整节**。硬编码绝对路径走 SKILL.md「硬编码绝对路径不出工作区访问」条款的后缀匹配——未命中按下示第二行格式记录"已尝试的后缀候选"。
 
 - `scripts/scan.sh` — 调用点 com.acme.file.UploadController#upload（UploadController.java:71），未在工作区找到该脚本
+- `/opt/myapp/scripts/scan.sh`（硬编码绝对路径） — 调用点 com.acme.file.UploadController#upload（UploadController.java:71），尝试后缀匹配工作区未命中 `myapp/scripts/scan.sh` / `scripts/scan.sh` / `scan.sh`

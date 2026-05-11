@@ -1,5 +1,5 @@
 ---
-description: biz-flow-recon 任务收尾审计子代理。独立审视 output/ 全貌，检查缺失、孤儿、不一致、警告标记数量，输出审计报告 _audit.md。
+description: biz-flow-recon 任务收尾审计子代理。独立审视 _results/ 全貌，检查缺失、孤儿、不一致、警告标记数量，输出审计报告 _audit.md。
 mode: subagent
 hidden: true
 permission:
@@ -26,14 +26,18 @@ permission:
 3. **aggregator 引用完整性**：features.md / overview.md 中链接是否都指向存在的 endpoint-*.md（无悬空）；endpoint-*.md 是否都被至少一个 aggregator 引用（无孤儿）
 4. **横向产物**：`interfaces.md` 是否存在（按 _plan 与代码事实判断是否应有）
 5. **未能追溯的引用一致性**：各 endpoint-*.md 末尾节合并到 aggregator 的去重正确性
+6. **文件操作目标路径完整度**：扫描各 `endpoint-*.md` 中标记为文件 I/O / 命令 / 外呼 / SQL 的节点（mermaid 节点描述、关键控制点行），核对是否含目标本身（路径 / 命令行 / URL / 表名）：
+   - 节点含抽象禁词（"调网关 / 上报监控 / 执行脚本 / 调用外部命令 / 读配置 / 写入文件"）且未携带具体路径 / URL / 表名 → "警告项"
+   - 文件操作节点完全无目标信息 → "不一致项"
+   - 已标注为"未能追溯"且对应条目已进入 `## 未能追溯的引用` 节 → "通过项"
 
-写 `<cwd>/biz-flow-recon/output/_audit.md`：
+写 `<cwd>/_results/_audit.md`：
 
 ```
 # 任务完整性审计
 
 生成时间：{ISO}
-审计范围：output/ 全部产物
+审计范围：_results/ 全部产物
 
 ## 总体状态
 ✓ / ⚠ / ✗
@@ -46,6 +50,6 @@ permission:
 ## 建议人工补全清单（按优先级）
 ```
 
-**输出路径约束**：仅写入 `<cwd>/biz-flow-recon/output/_audit.md`——不写其他位置。
+**输出路径约束**：仅写入 `<cwd>/_results/_audit.md`——不写其他位置。
 
 原则：**仅报告事实与一致性偏差，不修复**；审计**不阻断流程**——主 agent 按"不中断不询问"继续；默认覆盖 `_audit.md`。
