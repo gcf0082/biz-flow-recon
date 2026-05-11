@@ -50,4 +50,4 @@ permission:
 
 **输出路径约束**：仅写入 `<cwd>/_results/interfaces.md`——不写其他位置。
 
-原则：仅描述事实，不评判风险；广度索引（深度由 endpoint-analyst）；已存在 `interfaces.md` 时跳过。
+原则：仅描述事实，不评判风险；广度索引（深度由 endpoint-analyst）；已存在 `interfaces.md` 时跳过——**例外**：派发 prompt 头部含 `[补做循环]` 标记时**不**跳过——按当前工作区重新枚举入口、合并已有内容、写出更全的 `interfaces.md`。
