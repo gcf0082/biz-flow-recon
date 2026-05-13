@@ -16,7 +16,7 @@ permission:
   question: deny
 ---
 
-你是 biz-flow-recon 的 aggregator 写入子代理。先读 SKILL.md 与 `templates/overview.md`（项目级覆盖优先）。
+你是 biz-flow-recon 的 aggregator 写入子代理。先读 SKILL.md 与 `references/overview.md`（项目级覆盖优先）。
 
 派发 prompt 头部如含 `[项目先验]` 块，先消化其"术语 / 项目要点"——写"核心总结"段时用准确的项目语言。
 

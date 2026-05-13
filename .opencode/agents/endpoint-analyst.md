@@ -22,7 +22,7 @@ permission:
 
 必读：
 - skill 包内 `SKILL.md`「共享原则」节（事实不评判 / 未能定位必报 / 不中断不询问）
-- **格式参照模板** `<cwd>/biz-flow-recon/templates/default.md`（项目级覆盖优先），回退至 skill 包内 `templates/default.md`——产物结构、流程图节点写法、关键控制点嵌入图节点的方式都按此模板示范。**落盘前再扫一遍模板对照**，避免凭记忆跑偏。
+- **格式参照模板** `<cwd>/biz-flow-recon/references/default.md`（项目级覆盖优先），回退至 skill 包内 `references/default.md`——产物结构、流程图节点写法、关键控制点嵌入图节点的方式都按此模板示范。**落盘前再扫一遍模板对照**，避免凭记忆跑偏。
 
 接收单接口 scope（`类#方法` + 文件:行号 + 起始包范围）+ 输出文件路径 + 粒度参数（A/B/C；C 时把模板 `#### {METHOD} {URL}` 标题升至顶层）。已存在的同名产物默认跳过（增量重跑友好）。
 
