@@ -35,11 +35,11 @@ permission:
 
    每类差集在 `_audit.md` 单独成节，按 `<接口类型> <METHOD> <path>` 列条目，并给出建议的 slug（`_results/endpoint-{METHOD}-{slug}.md`），供主 agent 派发补做使用。
 
-2. **endpoint-*.md schema**：每份核对（顶层标题 / 业务描述段 / 必画图条件满足时含 flowchart TD / 不含评判性禁词 / 警告注释统计）
+2. **endpoint-*.md schema**：每份核对（顶层标题 / 业务描述段 / 必画图条件满足时含流程图（flowchart TD） / 不含评判性禁词 / 警告注释统计）
 3. **aggregator 引用完整性**：features.md / overview.md 中链接是否都指向存在的 endpoint-*.md（无悬空）；endpoint-*.md 是否都被至少一个 aggregator 引用（无孤儿）
 4. **横向产物**：`interfaces.md` 是否存在（按 _plan 与代码事实判断是否应有）
 5. **未能追溯的引用一致性**：各 endpoint-*.md 末尾节合并到 aggregator 的去重正确性
-6. **文件操作目标路径完整度**：扫描各 `endpoint-*.md` 中标记为文件 I/O / 命令 / 外呼 / SQL 的节点（mermaid 节点描述、关键控制点行），核对是否含目标本身（路径 / 命令行 / URL / 表名）：
+6. **文件操作目标路径完整度**：扫描各 `endpoint-*.md` 中标记为文件 I/O / 命令 / 外呼 / SQL 的节点（流程图节点描述、关键控制点行），核对是否含目标本身（路径 / 命令行 / URL / 表名）：
    - 节点含抽象禁词（"调网关 / 上报监控 / 执行脚本 / 调用外部命令 / 读配置 / 写入文件"）且未携带具体路径 / URL / 表名 → "警告项"
    - 文件操作节点完全无目标信息 → "不一致项"
    - 已标注为"未能追溯"且对应条目已进入 `## 未能追溯的引用` 节 → "通过项"

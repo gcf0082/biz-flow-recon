@@ -8,7 +8,7 @@ features.md）使用——单接口产物文件不包含此类外层包装。
 
 约定：图自包含——优先把输入流向、关键控制点、硬编码标注等事实**嵌入节点标签**；
 图能承载的下方文字 labeled 列表不再重复，仅保留图无法承载的（如 DTO 全限定名 /
-请求体字段树）。起点节点统一用 `START([开始])`，接口 URL / 请求维度由标题与
+请求体字段树）。入口节点统一用 `START([开始])`，接口 URL / 请求维度由标题与
 `**请求**` 行承载。
 
 文件 I/O / 命令 / 外呼 / SQL 节点**必须**写出目标本身（文件系统路径 / 完整命令行 /
@@ -23,10 +23,9 @@ SKILL.md「代码引用 / 路径 / URL / 命令一律原样保留」条款。
 最终字符串；`{var}` 占位**仅**保留给运行时动态输入；详见 SKILL.md「路径 / 命令 / URL
 中的变量值要做常量传播」条款。
 
-观测点（审计标记）：审计人定向观测的图节点用配色提示观测优先级——高（红
-#FCE4E4 / #C0392B）/ 中（橙 #FDF2E0 / #D68910）/ 低（浅黄 #FEF9E7 / #B7950B）；
-非观测点保持默认蓝灰 #E8EEF2 / #5B7B94。下例 ③/④/⑤/⑥ 均高观测优先级（用户
-输入直接拼到敏感槽 + TLS 校验关闭 + 内部 host 硬编码）。
+下例 ③/④/⑤/⑥ 为用户输入直接拼到敏感槽 + TLS 校验关闭 + 内部 host 硬编码的位置点，
+属于高观测优先级，节点 label 前加 `🔴` 标记。优先级分三档：`🔴` 高、`🟡` 中、`🟢` 低。
+图节点用 `{...}` 菱形表示判断分支，`[...]` 矩形表示处理步骤，`([...])` 圆角表示起点。
 -->
 
 # {范围名} 业务流讲解
@@ -45,25 +44,18 @@ SKILL.md「代码引用 / 路径 / URL / 命令一律原样保留」条款。
 
 ```mermaid
 flowchart TD
-    START([开始]) --> CHECK_EXT
+    START([开始])
+    CHECK_EXT{"① 校验 body.filename 后缀<br/>白名单 .pdf / .docx / .jpg / .png"}
+    CHECK_SIZE{"② 校验 file 大小<br/>≤ 50 MB"}
+    REJECT_EXT["❌ 返回 400 不支持类型"]
+    REJECT_SIZE["❌ 返回 413 体积超限"]
+    WRITE["③ 🔴 落地原始文件<br/>写 /data/uploads/{body.filename}"]
+    SCAN["④ 🔴 触发内容扫描<br/>ProcessBuilder bash scripts/scan.sh /data/uploads/{body.filename}"]
+    ARCHIVE["⑤ 🔴 归档扫描结果<br/>写 /data/scan-results/{body.filename}.json"]
+    REPORT["⑥ 🔴 上报到监控<br/>POST https://monitor.internal/scan-events"]
+    RESPONSE["✅ 🟢 返回 200 成功"]
 
-    subgraph 前置校验
-        CHECK_EXT{"① 校验 body.filename 后缀<br/>白名单 .pdf / .docx / .jpg / .png<br/><small>UploadController.java:41 · 关键控制点（判断）</small>"}
-        CHECK_SIZE{"② 校验 file 大小<br/>≤ 50 MB<br/><small>application.yml:67 · 关键控制点（限制）</small>"}
-    end
-
-    subgraph 异常终止
-        REJECT_EXT["❌ 返回 400 不支持类型<br/><small>UploadController.java:52</small>"]
-        REJECT_SIZE["❌ 返回 413 体积超限<br/><small>UploadController.java:55</small>"]
-    end
-
-    subgraph 核心处理
-        WRITE["③ 落地原始文件<br/>写 /data/uploads/{body.filename}<br/>—— body.filename 拼接到路径<br/><small>UploadController.java:62</small>"]
-        SCAN["④ 触发内容扫描<br/>ProcessBuilder bash scripts/scan.sh /data/uploads/{body.filename}<br/>—— body.filename 拼接到命令；scripts/scan.sh · 硬编码<br/><small>UploadController.java:71 · 关键控制点（配置）</small>"]
-        ARCHIVE["⑤ 归档扫描结果<br/>写 /data/scan-results/{body.filename}.json<br/>—— body.filename 拼接到路径<br/><small>UploadController.java:84</small>"]
-        REPORT["⑥ 上报到监控<br/>POST https://monitor.internal/scan-events · 硬编码<br/>OkHttp · TLS 校验关闭（trustAll X509TrustManager + HostnameVerifier 恒真）<br/><small>MonitorClient.java:33 · 关键控制点（开关）</small>"]
-    end
-
+    START --> CHECK_EXT
     CHECK_EXT -->|否| REJECT_EXT
     CHECK_EXT -->|是| CHECK_SIZE
     CHECK_SIZE -->|否| REJECT_SIZE
@@ -71,16 +63,7 @@ flowchart TD
     WRITE --> SCAN
     SCAN --> ARCHIVE
     ARCHIVE --> REPORT
-
-    style START fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
-    style CHECK_EXT fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
-    style CHECK_SIZE fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
-    style REJECT_EXT fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
-    style REJECT_SIZE fill:#E8EEF2,stroke:#5B7B94,stroke-width:2px,color:#2C3E50
-    style WRITE fill:#FCE4E4,stroke:#C0392B,stroke-width:2px,color:#641E16
-    style SCAN fill:#FCE4E4,stroke:#C0392B,stroke-width:2px,color:#641E16
-    style ARCHIVE fill:#FCE4E4,stroke:#C0392B,stroke-width:2px,color:#641E16
-    style REPORT fill:#FCE4E4,stroke:#C0392B,stroke-width:2px,color:#641E16
+    REPORT --> RESPONSE
 ```
 
 ## 未能追溯的引用
