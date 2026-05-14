@@ -23,8 +23,8 @@ SKILL.md「代码引用 / 路径 / URL / 命令一律原样保留」条款。
 最终字符串；`{var}` 占位**仅**保留给运行时动态输入；详见 SKILL.md「路径 / 命令 / URL
 中的变量值要做常量传播」条款。
 
-下例 ③/④/⑤/⑥ 为用户输入直接拼到敏感槽 + TLS 校验关闭 + 内部 host 硬编码的位置点，
-属于高观测优先级，节点 label 前加 `🔴` 标记。优先级分三档：`🔴` 高、`🟡` 中、`🟢` 低。
+下例 ③④⑤ 为用户输入拼接到文件路径/命令，属于高观测优先级（`🔴`）；
+⑥ 为硬编码 URL + TLS 关闭，存在风险但无用户输入，属于低观测优先级（`🟡`）。
 图节点用 `{...}` 菱形表示判断分支，`[...]` 矩形表示处理步骤，`([...])` 圆角表示起点。
 -->
 
@@ -52,8 +52,8 @@ flowchart TD
     WRITE["③ 🔴 落地原始文件<br/>写 /data/uploads/{body.filename}"]
     SCAN["④ 🔴 触发内容扫描<br/>ProcessBuilder bash scripts/scan.sh /data/uploads/{body.filename}"]
     ARCHIVE["⑤ 🔴 归档扫描结果<br/>写 /data/scan-results/{body.filename}.json"]
-    REPORT["⑥ 🔴 上报到监控<br/>POST https://monitor.internal/scan-events"]
-    RESPONSE["✅ 🟢 返回 200 成功"]
+    REPORT["⑥ 🟡 上报到监控<br/>POST https://monitor.internal/scan-events"]
+    RESPONSE["✅ 返回 200 成功"]
 
     START --> CHECK_EXT
     CHECK_EXT -->|否| REJECT_EXT
