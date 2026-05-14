@@ -53,7 +53,7 @@ flowchart TD
     SCAN["④ 🔴 触发内容扫描<br/>ProcessBuilder bash scripts/scan.sh /data/uploads/{body.filename}"]
     ARCHIVE["⑤ 🔴 归档扫描结果<br/>写 /data/scan-results/{body.filename}.json"]
     REPORT["⑥ 🟡 上报到监控<br/>POST https://monitor.internal/scan-events"]
-    RESPONSE["✅ 返回 200 成功"]
+    RESPONSE["返回 200 成功"]
 
     START --> CHECK_EXT
     CHECK_EXT -->|否| REJECT_EXT
