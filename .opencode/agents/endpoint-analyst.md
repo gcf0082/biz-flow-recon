@@ -38,20 +38,7 @@ permission:
 
 **走不通**就写"未在工作区找到 X"并加入 `## 未能追溯的引用` 节。
 
-**变量值常量化**：路径/命令/URL 中的变量尽量回溯到字面量，代入后写出拼接后的最终字符串。
-
-可代入的常量来源：`static final` / `const` / 顶层不可变赋值 / 字面量赋值后无再赋值 / `@Value` 含字面量默认值且工作区配置文件无覆盖 / 配置文件 key→字面量 / 枚举常量 / 返回字面量的 getter / 字符串连接（当所有参数为字面量）。
-
-必须保留 `{var}` 占位的"运行时输入"：HTTP path / query / header / body 字段 / DB 查询结果 / 文件内容 / 系统属性 / 环境变量（除非工作区有具名 `.env` 配置）/ 反射构造 / 类路径动态扫描 / 不在工作区的外部配置。
-
-多分支取值：if-else / switch 各赋不同字面量 → 列全部 `{"/a" OR "/b"}` + 标"多分支取值（条件: <一句话条件>）"。
-
-回溯深度：受 `[项目先验]` "递归追溯深度"约束。超深度仍未到常量 → 保留 `{var}` 占位 + 加 `（超出递归深度）` 后缀。
-
-示例（`UPLOAD_DIR = "/data/uploads"` + `SCAN_BIN = "/opt/bin/scanner"` 均 `static final`，`file.getOriginalFilename()` 是 HTTP 输入）：
-
-- 错误：`EXEC {SCAN_BIN} {UPLOAD_DIR}/{body.filename}`
-- 正确：`EXEC /opt/bin/scanner /data/uploads/{body.filename}`
+**变量值常量化**：常量来源（`static final` / `const` / 字面量赋值 / `@Value` 默认值 / 配置文件 / 枚举 / 返回字面量的 getter）代入字面量；运行时输入（HTTP 字段 / DB / 文件 / 环境变量 / 反射 / 外部配置）保留 `{var}`。多分支列全部 + 标条件。超深度保留 `{var}` + 标"超出递归深度"。
 
 **捕获请求维度**：path / query / 关键 header（鉴权、Content-Type）/ body 字段树。DTO 递归追溯到定义读出真实字段，禁止臆测。
 
