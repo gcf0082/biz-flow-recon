@@ -21,7 +21,13 @@ permission:
 派发 prompt 头部如含 `[项目先验]` 块，先消化其内容（内部服务定位 / 递归追溯深度 / 执行模式 / 术语 / 项目要点）作为下文执行的项目级上下文。
 
 任务：
-1. 扫描被分析项目，识别**所有候选触达式入口**——任何能由外部或调度器触发的代码入口：web 接口（REST / JAX-RS / Servlet / GraphQL）、MQ 消费者、gRPC server、WebSocket / SSE、定时任务、CLI `main`、前端 router。
+1. 扫描被分析项目，识别**所有候选触达式入口**——任何能由外部或调度器触发的代码入口：
+   - **HTTP 路由/端点** — 路由装饰器、路由器定义、处理器注册、Servlet
+   - **CLI 参数解析** — argparse、commander、cobra、clap
+   - **文件上传** — multipart 处理器、文件处理
+   - **WebSocket 处理器** — 实时数据摄取
+   - **队列消费者** — 来自外部队列的消息处理
+   - **定时任务/cron** — 处理外部数据的作业
 2. 按目录 / 包 / maven 模块 初步划分子功能，每个子功能聚合相关入口。
 3. 对每个 endpoint 评估**审计优先级**（启发式分流 hint，**不是风险结论**）：
    - **high**：路径 / 方法名 / 类名含 `upload` / `download` / `import` / `export` / `exec` / `shell` / `script` / `payment` / `charge` / `refund` / `transfer` / `admin` / `auth` / `login` / `password` / `token` / `redirect` / `proxy` / `webhook` / `callback` / `crypto` / `encrypt` / `decrypt` / `sign`；或方法为 PUT / DELETE / PATCH 涉及核心业务对象
