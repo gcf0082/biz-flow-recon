@@ -5,7 +5,7 @@ description: 按安全测试视角解读前/后端代码仓库，输出业务流
 
 # biz-flow-recon
 
-面向安全测试人员说明代码行为。**主 agent 仅负责调度**——所有内容产出由 5 个子代理完成。
+面向安全测试人员说明代码行为。**主 agent 仅负责调度**——所有内容产出由 3 个子代理完成。
 
 ## 共享原则（全员适用）
 
@@ -15,10 +15,10 @@ description: 按安全测试视角解读前/后端代码仓库，输出业务流
 - **硬编码绝对路径不出工作区访问**：代码若引用绝对路径资源（`/opt/...` / `/etc/...` / `/data/...` / `C:\...` 等），**不要**尝试读取该绝对路径本身——无授权且源码仓里通常找不到。改用**工作区后缀匹配**寻找同名源文件用于内容追溯：把绝对路径按目录层级倒序生成后缀候选，在工作区内 glob 搜索，**取最长命中的后缀**作为内容追溯候选；并列最长则列全部并标注"存在多个候选"。无命中按"未能追溯"处理。**节点描述里的目标路径永远写代码硬编码原值**，后缀匹配仅服务于内容深读。
 - **代码引用 / 路径 / URL / 命令一律原样保留**：产物中所有源码引用（`path:line`）、文件系统路径、HTTP / RPC URL、命令行、SQL 等**不论长度都不省略、不截断、不用 `…` / `...` / 中段缩写**。表格列宽不够就让单元格 wrap，流程图节点写不下就多行 `<br/>`——绝不删字符。视觉缩写**只许**用在纯展示项（章节标题、子功能名等），**永不**用于"可被 grep / 复制定位的标识符"。动态片段保留 `{变量名}` 占位是**结构化变量标注**，不属于省略。
 - **路径 / 命令 / URL 中的变量值要做常量传播**：节点目标里的变量必须沿数据流回溯到值——**变量最终绑定到常量**（`static final` / `const` / 字面量赋值 / 工作区配置文件字面量 / `@Value` 字面默认值 / 枚举字面量 / 返回字面量的方法等）时，**必须把常量代入并写出拼接后的最终字符串**，不留 `{常量名}` 占位。`{var}` 占位**只**保留给真正的运行时动态输入：HTTP 请求参数 / DB 返回 / 文件内容 / 不在工作区的外部配置 / 反射构造。多分支取值（if-else 各赋一个字面量）列全部候选 `{"/a" OR "/b"}` 并标"多分支取值"。回溯深度受 `[项目先验] 递归追溯深度`（默认 2）约束；超深度仍未到常量则保留 `{var}` 占位并加 `（超出递归深度）` 标注。
-- **接口完整性硬底线**：所有"对外可触达"的接口必须被分析过——`completion-verifier` 用独立 rescan 做接口集合三方比对（planner / interface-catalog / verifier-rescan），主 agent 见缺失差集自动派发**一轮**补做（增量派发 planner / interface-catalog / endpoint-analyst）；补做后第二次 `_audit.md` 即最终结果，仍有缺失显式标"经一轮补做后仍存在缺失"。**不询问用户**，按 "不中断不询问" 原则继续。
+- **接口完整性硬底线**：所有"对外可触达"的接口必须被分析过——planner 与 interface-catalog 两份独立扫描交集为目标集合，实际产物与此集合比对；有缺失时主 agent 自动派发**一轮**补做（增量派发 planner / interface-catalog / endpoint-analyst）；补做后仍有缺失则显式标入产物末尾。**不询问用户**，按 "不中断不询问" 原则继续。
 - **不中断、不询问**：skill 一旦显式调用即全自动跑到底——不论项目规模、未追溯引用数量、解析歧义。错误按"显式标注 + 继续"处理，**绝不暂停等待用户输入**。用户事后可改 `_plan.md` / 删除产物文件重跑。
 - **每接口一个 subagent**：每个接口由独立 subagent 完成。
-- **跳过 vs 覆盖**：planner / interface-catalog / endpoint-analyst 默认跳过已存在产物（增量重跑友好）；aggregator-writer / completion-verifier 始终覆盖（始终基于最新产物重写）。
+- **跳过 vs 覆盖**：planner / interface-catalog / endpoint-analyst 默认跳过已存在产物（增量重跑友好）。
 
 ## 取舍
 
@@ -34,10 +34,7 @@ description: 按安全测试视角解读前/后端代码仓库，输出业务流
 | 2 | 派发 `planner` | 派发 prompt 头部带"项目先验摘要"块；写 `_plan.md`；已存在则跳过 |
 | 3 | 并行派发 | `interface-catalog` + N × `endpoint-analyst`（每接口一个）；派发 prompt 头部均带"项目先验摘要"块；按 `_plan.md` 顺序派发——`planner` 已按审计优先级（high → medium → low）排序，串行模式下自然先做高优先级；默认并行，"项目先验摘要"中"执行模式: 串行"时改串行 |
 | 4 | 等待 + 失败重试 | 子代理失败重派最多 2 次；仍失败则在产物头部插入 `<!-- ⚠ 产物自检未通过：缺失 X 请人工补全 -->`，**不阻断** |
-| 5 | 派发 `aggregator-writer` | 派发 prompt 头部带"项目先验摘要"块 + 粒度参数；产出 `features.md` / `features-{slug}.md` / `overview.md`；顶部带横向产物链接 |
-| 6 | 派发 `completion-verifier` 第一次 | 派发 prompt 头部带"项目先验摘要"块；写 `_audit.md`；含"接口完整性三方比对"四节差集；**不阻断流程** |
-| 6.5 | **补做循环（限 1 轮）** | 解析 `_audit.md` "接口完整性 — *" 四节：任一节非"无"即触发——若"planner 漏扫" / "planner 与 catalog 不一致"非空，先派发 `planner` 与 / 或 `interface-catalog` 做**增量重生成**（删除原 `_plan.md` / `interfaces.md` 再让其重写，派发 prompt 头部加 `[补做循环]` 标记）；接着按"endpoint 产物缺失"列出的 `<METHOD> <path>` + 建议 slug 派发**新 `endpoint-analyst`**（每接口一个）。补做完成后**重跑** `aggregator-writer` + `completion-verifier`（后者派发 prompt 头部加 `[补做循环]` 标记）。本轮限**最多一次**——第二次 verifier 报告即最终 `_audit.md`，即使仍有缺失也不再循环（verifier 自身会在头部含 `[补做循环]` 时写"经一轮补做后仍存在缺失"）|
-| 7 | 告知用户产物路径 | aggregator 入口 + 横向产物（`interfaces.md`）+ `_audit.md` |
+| 5 | 告知用户产物路径 | 横向产物（`interfaces.md`）+ 各 `endpoint-*.md` |
 
 ### 粒度选择（步骤 1）
 
@@ -62,15 +59,13 @@ description: 按安全测试视角解读前/后端代码仓库，输出业务流
 
 ## 输出文件名约定
 
-slug 小写连字符；中文转拼音/英文同义词。**slug = 路径去除前导 `/` 后小写连字符**（`/api/files/upload` → `api-files-upload`）。
+slug 小写连字符；中文转拼音/英文同义词。**HTTP 端点的 slug = 路径去除前导 `/` 后小写连字符**（`/api/files/upload` → `api-files-upload`）；非 HTTP 端点的 slug 取接口标识名（命令名 / topic 名 / 服务名等）。
 
 | 文件 | 写入者 | 用途 |
 |---|---|---|
 | `_plan.md` | planner | 子任务计划 |
 | `interfaces.md` | interface-catalog | 对外暴露接口清单（inbound 攻击面） |
-| `endpoint-{METHOD}-{slug}.md` | endpoint-analyst | 单接口深度分析 |
-| `features.md` / `features-{slug}.md` / `overview.md` | aggregator-writer | 索引 aggregator |
-| `_audit.md` | completion-verifier | 任务完整性审计 |
+| `endpoint-{TYPE}-{slug}.md` | endpoint-analyst | 单接口深度分析（TYPE: HTTP method / CLI / MQ / WS 等） |
 
 ## 工作目录与模板
 

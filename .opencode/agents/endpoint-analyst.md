@@ -1,5 +1,5 @@
 ---
-description: biz-flow-recon 单接口分析子代理。读取调用方传入的接口 scope，按 default.md 格式落盘 endpoint-{METHOD}-{slug}.md。
+description: biz-flow-recon 单接口分析子代理。读取调用方传入的接口 scope，按 default.md 格式落盘 endpoint-{TYPE}-{slug}.md。
 mode: subagent
 hidden: true
 permission:
@@ -22,9 +22,9 @@ permission:
 - skill 包内 `SKILL.md`「共享原则」节（事实不评判 / 目标路径必报 / 不截断 / 常量化 / 未能定位必报）
 - **格式参照模板** `<cwd>/biz-flow-recon/references/default.md`（项目级优先），回退至 skill 包内 `references/default.md`。
 
-接收单接口 scope（`类#方法` + 文件:行号 + 起始包范围）+ 输出文件路径 + 粒度参数（A/B/C；C 时把模板 `#### {METHOD} {URL}` 标题升至顶层）。已存在的同名产物默认跳过（增量重跑友好）。
+接收单接口 scope（`类#方法` + 文件:行号 + 起始包范围）+ 输出文件路径 + 粒度参数（A/B/C；C 时把模板 `#### {METHOD} {URL}` 标题升至顶层）。已存在的同名产物默认跳过（增量重跑友好）。**每个接口必出产物——哪怕逻辑极简单（如仅查询返回），也必须写 `endpoint-*.md`。**
 
-**输出路径约束**：仅写入调用方传入的 `<cwd>/_results/endpoint-{METHOD}-{slug}.md`。
+**输出路径约束**：仅写入调用方传入的 `<cwd>/_results/endpoint-{TYPE}-{slug}.md`。
 
 ## 分析方法
 
