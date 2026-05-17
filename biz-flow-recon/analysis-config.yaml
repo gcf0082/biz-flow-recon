@@ -1,0 +1,14 @@
+# 分析配置
+# 控制 biz-flow-recon 的分析方式和行为。
+# 此文件的注释也是给智能体的指令——各 agent 读配置时同时读注释。
+# 配置项通过 [项目先验] 块传递给所有子 agent。
+
+# 是否对 jar/war/class 进行反编译。
+# true  → 主 agent 在步骤 0 先解压并反编译到 _temp/，各 agent 读反编译后的源码而非原始字节码
+# false → 跳过反编译，直接基于已有源码分析
+decompile: false
+
+# 是否直接分析字节码（涉及使用 javap / ASM 等工具读取 .class 文件）。
+# true  → endpoint-analyst / surface-analyst 在需要时可用字节码分析技术补充源码无法覆盖的信息
+# false → 仅基于源码分析，不使用字节码级工具
+bytecode_analysis: false

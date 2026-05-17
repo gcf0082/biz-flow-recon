@@ -30,7 +30,7 @@ description: 按安全测试视角解读前/后端代码仓库，输出业务流
 
 | 步骤 | 主 agent 动作 | 派发的子代理 / 决策 |
 |---|---|---|
-| 0 | 读 knowledge/ 并形成"项目先验摘要" | 读 `<cwd>/.opencode/skills/biz-flow-recon/knowledge/` 全量 .md（如有），抽取要点（内部服务定位 / 执行模式 / 及其他 knowledge/ 关键事实）→ 内存中的"项目先验摘要"块；解析模板路径（项目级覆盖 → skill 默认）。**不写任何文件** |
+| 0 | 读 knowledge/ + config → 预处理 + 形成"项目先验摘要" | 读 `<cwd>/.opencode/skills/biz-flow-recon/knowledge/` 全量 .md + `<cwd>/biz-flow-recon/analysis-config.yaml`（如有）；根据配置执行预处理（如 `decompile: true` 则解压/反编译到 `_temp/`）；抽取要点 → 内存中的"项目先验摘要"块（含配置项）；解析模板路径（项目级覆盖 → skill 默认）。**不写任何文件** |
 | 1 | 确定粒度 | 见下方"粒度选择"小节 |
 | 2 | 派发 `planner` | 派发 prompt 头部带"项目先验摘要"块；写 `_plan.md`；已存在则跳过 |
 | 3 | 并行派发 | `interface-catalog` + N × `endpoint-analyst`（每接口一个）+ M × `surface-analyst`（每非接口攻击面一个）；派发 prompt 头部均带"项目先验摘要"块；按 `_plan.md` 顺序派发——`planner` 已按审计优先级（high → medium → low）排序，串行模式下自然先做高优先级；默认并行，"项目先验摘要"中"执行模式: 串行"时改串行 |
@@ -54,6 +54,9 @@ description: 按安全测试视角解读前/后端代码仓库，输出业务流
   - charge-svc → 代码在 ../services/charge-svc/
   - billing    → 黑盒
 执行模式: 串行
+分析配置:
+  decompile: true
+  bytecode_analysis: true
 术语 / 项目要点:
   - <knowledge/ 下各 .md 抽取的关键事实，每条 1 行>
 ```
