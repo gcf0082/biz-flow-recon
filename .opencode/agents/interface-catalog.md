@@ -51,7 +51,7 @@ permission:
 
 扫描并记录非接口形式的攻击面，写 `<cwd>/_results/attack-surface.md`（仅索引，深度分析由 surface-analyst 负责），涵盖：
 
-- **独立可执行脚本**（shell、python、perl 等可被直接执行的脚本）
+- **独立可执行脚本**（仅收录真正攻击面——满足任一：可被外部直接执行 / 被 cron/systemd/sudo 引用 / 被 HTTP 端点或其他接口调用 / 接收外部输入且有副作用 / 被其他攻击面引用。不收录内部辅助脚本：仅被 source/import 使用、构建/测试辅助、无执行路径的库脚本）
 - **独立工具 / 二进制文件**（项目自带的编译产物、工具链）
 - **sudo 配置 / SUID 权限**（特权执行配置）
 - **定时任务 / 自启脚本**（cron、systemd、init.d 等）
