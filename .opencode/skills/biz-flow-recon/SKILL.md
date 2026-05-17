@@ -34,7 +34,7 @@ description: 按安全测试视角解读前/后端代码仓库，输出业务流
 | 2 | 派发 `planner` | 派发 prompt 头部带"项目先验摘要"块；写 `_plan.md`；已存在则跳过 |
 | 3 | 并行派发 | `interface-catalog` + N × `endpoint-analyst`（每接口一个）；派发 prompt 头部均带"项目先验摘要"块；按 `_plan.md` 顺序派发——`planner` 已按审计优先级（high → medium → low）排序，串行模式下自然先做高优先级；默认并行，"项目先验摘要"中"执行模式: 串行"时改串行 |
 | 4 | 等待 + 失败重试 | 子代理失败重派最多 2 次；仍失败则在产物头部插入 `<!-- ⚠ 产物自检未通过：缺失 X 请人工补全 -->`，**不阻断** |
-| 4.5 | **产物完整性校验** | 读 `_plan.md` 提取 `expected_output` 列表，与 `_results/` 下实际 `endpoint-*.md` 文件比对；有缺失则重新派发 endpoint-analyst（仅限缺失项，最多 1 轮）；补派后再缺则不动，步进 5 |
+| 4.5 | **派发 `completion-checker`** | 检 `_plan.md` 与 `_results/` 产物一致性；缺失则补派 endpoint-analyst；循环至全完成或满 2 轮 |
 | 5 | 告知用户产物路径 | 横向产物（`interfaces.md`）+ 各 `endpoint-*.md` |
 
 ### 粒度选择（步骤 1）
